@@ -42,7 +42,7 @@ module HASKELL-CORE-SYNTAX
                 | Exp2 "@" Ty2
                 | Exp2
 
-  syntax Exp ::= "lam" ListBind "->" Exp
+  syntax Exp ::= "\\" ListBind "->" Exp
                | "%let" Vdefg "in" Exp
                | "%case" Exp2 "of" Vbind "{" ListAlt "}"
                | "%coerce" Ty2  Exp
