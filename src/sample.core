@@ -1,0 +1,4 @@
+%module Main
+
+  Main.main :: PrelGHC.Statezh PrelGHC.RealWorld -> Bar =
+    PrelIO.putStrLn (PrelBase.unpackCStringzh ("hello world" :: PrelGHC.Addrzh));
