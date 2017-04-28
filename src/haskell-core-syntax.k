@@ -16,7 +16,7 @@ module HASKELL-CORE-SYNTAX
   syntax ListTyt ::= ""
                    | Tyt ListTyt
 
-  syntax Tyt ::= Ty2
+  syntax Tyt ::= Ty
 
   syntax ListCdef ::= Cdef
                     | Cdef ";" ListCdef
@@ -33,22 +33,18 @@ module HASKELL-CORE-SYNTAX
   syntax ListVdef ::= Vdef
                     | Vdef ";" ListVdef
 
-  syntax Exp2 ::= Id
-                | QualIdent
-                | Lit
-                | "(" Exp ")" [bracket]
-
-  syntax Exp1 ::= Exp1 Exp2
-                | Exp2 "@" Ty2
-                | Exp2
-
-  syntax Exp ::= "\\" ListBind "->" Exp
-               | "%let" Vdefg "in" Exp
-               | "%case" Exp2 "of" Vbind "{" ListAlt "}"
-               | "%coerce" Ty2  Exp
-               | "%note" String Exp
-               | "%external" String Ty
-               | Exp1
+  syntax Exp ::= Id
+               | QualIdent
+               | Lit
+               > Exp Exp       [left]
+               > "\\" ListBind "->" Exp
+               > "%let" Vdefg "in" Exp
+               > "%case" Exp "of" Vbind "{" ListAlt "}"
+               > "%coerce" Ty  Exp
+               > "%note" String Exp
+               > "%external" String Ty
+               > Exp "@" Ty
+               > "(" Exp ")" [bracket]
 
   syntax Bind ::= Vbind
                 | "@" Tbind
@@ -83,16 +79,12 @@ module HASKELL-CORE-SYNTAX
   syntax ListATbind ::= ""
                       | ATbind ListATbind
 
-  syntax Ty2 ::= Id
-               | QualIdent
-               | "(" Ty ")" [bracket]
-
-  syntax Ty1 ::= Ty1 Ty2
-               | Ty2
-
-  syntax Ty ::= Ty1 "->" Ty2
-              | "%forall" ListTbind "." Ty
-              | Ty1
+  syntax Ty ::= Id
+              > QualIdent
+              > Ty "->" Ty   [right]
+              > Ty Ty        [left]
+              > "%forall" ListTbind "." Ty
+              > "(" Ty ")"      [bracket]
 
   syntax Kind1 ::= "*"
           | "#"
@@ -102,10 +94,10 @@ module HASKELL-CORE-SYNTAX
   syntax Kind ::= Kind1 "->" Kind
          | Kind1
 
-  syntax Lit ::= "(" Int "::" Ty2 ")"
-        // | "(" Double "::" Ty2 ")"
-        // | "(" Char "::" Ty2 ")"
-        | "(" String "::" Ty2 ")"
+  syntax Lit ::= "(" Int "::" Ty ")"
+        // | "(" Double "::" Ty ")"
+        // | "(" Char "::" Ty ")"
+        | "(" String "::" Ty ")"
 
   syntax QualIdent ::= Id "." Id
 
