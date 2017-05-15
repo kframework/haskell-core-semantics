@@ -19,11 +19,13 @@ library
   build-depends:       base >= 4.7 && < 5
   default-language:    Haskell2010
 
-executable compile-to-core-exe
+executable to-core
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
+                     , ghc >= 8.0.2
+                     , ghc-paths >= 0.1.0.9
                      , compile-to-core
   default-language:    Haskell2010
 
