@@ -21,22 +21,36 @@ import           Var
 args :: [String] -> String
 args ss = "(" ++ intercalate "; " ss ++ ")"
 
+prType :: Type -> String
+prType = error "TODO"
+
 pExpr :: CoreExpr -> String
-pExpr v@(Var x) = OP.showSDocUnsafe (OP.ppr v)
-pExpr l@(Lit a) = OP.showSDocUnsafe (OP.ppr l)
+pExpr v@(Var x) = show $ U.getUnique x
+pExpr l@(Lit a) = "lit" ++ "[" ++ OP.showSDocUnsafe (OP.ppr l) ++ "]"
 pExpr (App e1 e2) = "app" ++ args (pExpr <$> [e1, e2])
 pExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ pExpr e]
+pExpr (Let (Rec ((b, e1):bs)) e2) =
+  let rest = pExpr (Let (Rec bs) e2) in
+    "letrec" ++ args [pExpr e1, outVar b ++ "." ++ rest]
 pExpr (Let (NonRec b e1) e2) =
-    "let" ++ args [(show . U.getUnique $ b) ++ "." ++ pExpr e1] ++ pExpr e2
+    "let" ++ args [pExpr e1, (show . U.getUnique $ b) ++ "." ++ pExpr e2]
+pExpr (Case e b ty alts)  =
+    "case" ++ args [pExpr e, outVar b, "tyTODO", "altsTODO"]
 pExpr (Cast e co) = "coerce" ++ args [pExpr e]
 pExpr (Tick t e) = "tick" ++ args [pExpr e]
 pExpr (Type _) = "type"
 pExpr (Coercion co) = "coercion"
 
+outVar :: CoreBndr -> String
+outVar = show . U.getUnique
+
+prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
+prettyDecl (b, e) = outVar b ++ "." ++ pExpr e
+
 prettyBind :: CoreBind -> String
-prettyBind (NonRec _ e) = "decl" ++ args [pExpr e]
+prettyBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), pExpr e]
 prettyBind (Rec []) = ""
-prettyBind (Rec ((b, e):bs)) = pExpr e
+prettyBind (Rec bs) = "declRec" ++ args (prettyDecl <$> bs)
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
