@@ -70,5 +70,6 @@ compileToCore modName = runGhc (Just libdir) $ do
 
 main :: IO ()
 main = do
-  c <- compileToCore "Foo"
+  args <- getArgs
+  c <- compileToCore (head args)
   mapM_ (putStrLn . prettyBind) c
