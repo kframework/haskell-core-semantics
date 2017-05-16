@@ -1,5 +1,3 @@
-{-# LANGUAGE ExplicitForAll     #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE UnicodeSyntax      #-}
 
 module Main where
@@ -7,8 +5,8 @@ module Main where
 import qualified BasicTypes
 import           Control.Monad      ((<=<))
 import           CoreSyn
-import           Data.List          (concat, intersperse)
-import           DynFlags           (defaultLogAction)
+import           Data.List          (concat, intercalate)
+import           DynFlags           (defaultLogAction, ghcMode)
 import           GHC
 import           GHC.Paths          (libdir)
 import           HscTypes           (mg_binds)
@@ -17,34 +15,28 @@ import qualified Name
 import           System.Environment
 import qualified TyCoRep
 import qualified Outputable as OP
+import qualified Unique as U
 import           Var
 
-deriving instance Show BasicTypes.FunctionOrData
-deriving instance Show Literal
+args :: [String] -> String
+args ss = "(" ++ intercalate "; " ss ++ ")"
 
-foo :: GhcMonad m => FilePath -> m CoreModule
-foo = GHC.compileToCoreModule
-
-args :: [Expr CoreBndr] -> String
-args xs = concat $ intersperse "," (map prettyExpr xs)
-
-prettyVar :: Var -> String
-prettyVar x = Name.nameStableString $ getName  x
-
-prettyExpr :: Expr CoreBndr -> String
-prettyExpr (Var v)            = error "TODO"
-prettyExpr (Lit l)            = show l
-prettyExpr (Type ty)          = error "TODO"
-prettyExpr (Coercion co)      = error "TODO"
-prettyExpr (App e1 e2)        = error "TODO"
-prettyExpr (Lam _ e)          = error "TODO"
-prettyExpr (Let bind body)    = error "TODO"
-prettyExpr (Case e _ ty alts) = error "TODO"
-prettyExpr (Tick t e)         = error "TODO"
-prettyExpr (Cast e co)        = error "TODO"
+pExpr :: CoreExpr -> String
+pExpr v@(Var x) = OP.showSDocUnsafe (OP.ppr v)
+pExpr l@(Lit a) = OP.showSDocUnsafe (OP.ppr l)
+pExpr (App e1 e2) = "app" ++ args (pExpr <$> [e1, e2])
+pExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ pExpr e]
+pExpr (Let (NonRec b e1) e2) =
+    "let" ++ args [(show . U.getUnique $ b) ++ "." ++ pExpr e1] ++ pExpr e2
+pExpr (Cast e co) = "coerce" ++ args [pExpr e]
+pExpr (Tick t e) = "tick" ++ args [pExpr e]
+pExpr (Type _) = "type"
+pExpr (Coercion co) = "coercion"
 
 prettyBind :: CoreBind -> String
-prettyBind (NonRec _ e) = "nonrec" ++ (args [e])
+prettyBind (NonRec _ e) = "decl" ++ args [pExpr e]
+prettyBind (Rec []) = ""
+prettyBind (Rec ((b, e):bs)) = pExpr e
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
@@ -56,5 +48,5 @@ compileToCore modName = runGhc (Just libdir) $ do
     return $ mg_binds . coreModule $ ds
 
 main = do
-  c <- compileToCore "x = 5"
-  mapM_ (\x -> putStrLn (prettyBind x)) c
+  c <- compileToCore "Foo"
+  mapM_ (putStrLn . prettyBind) c
