@@ -14,9 +14,10 @@ import           Literal
 import qualified Name
 import qualified Outputable         as OP
 import           System.Environment
-import           TyCoRep            (Type (..))
+import           TyCoRep            (Type (..), TyBinder (..))
 import qualified Unique             as U
 import           Var
+import TyCon
 
 args :: [String] -> String
 args ss = "(" ++ intercalate "; " ss ++ ")"
@@ -24,39 +25,52 @@ args ss = "(" ++ intercalate "; " ss ++ ")"
 outVar :: CoreBndr -> String
 outVar = show . U.getUnique
 
+outTyVar :: TyBinder -> String
+outTyVar (Named tyvar vf) = show $ U.getUnique tyvar
+outTyVar (Anon ty) = prType ty
+
+prTyCon :: TyCon -> String
+prTyCon tc
+  | isFunTyCon tc = "arrtycon"
+  | isAlgTyCon tc || isTupleTyCon tc || isTypeSynonymTyCon tc =
+      "algTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
+  | isPrimTyCon tc = "primTyCon()"
+  | isPromotedDataCon tc = "promDataCon()"
+
 prType :: Type -> String
 prType (TyVarTy x)      = outVar x
 prType (AppTy ty1 ty2)  = "typapp" ++ args [prType ty1, prType ty2]
 prType (TyConApp tc kt) = error "TODO: TyConApp case of prType."
-prType (ForAllTy _ _)   = error "TODO: ForAllTy case of prType."
+prType (ForAllTy (Named tyvar vf) ty) =
+    "forall" ++ args [show (U.getUnique tyvar) ++ "." ++ prType ty]
+prType (ForAllTy (Anon ty1) ty2) = "arr" ++ args [prType ty1, prType ty2]
 prType (LitTy tyl)      = OP.showSDocUnsafe (OP.ppr tyl)
 prType (CastTy ty kindco) = error "TODO: CastTy case of prType."
 prType (CoercionTy co) = error "TODO: CoercionTy case of prType."
 
-pExpr :: CoreExpr -> String
-pExpr v@(Var x) = show $ U.getUnique x
-pExpr l@(Lit a) = "lit" ++ "[" ++ OP.showSDocUnsafe (OP.ppr l) ++ "]"
-pExpr (App e1 e2) = "app" ++ args (pExpr <$> [e1, e2])
-pExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ pExpr e]
-pExpr (Let (Rec []) e2) = pExpr e2
-pExpr (Let (Rec ((b, e1):bs)) e2) =
-  let rest = pExpr (Let (Rec bs) e2) in
-    "letrec" ++ args [pExpr e1, outVar b ++ "." ++ rest]
-pExpr (Let (NonRec b e1) e2) =
-    "let" ++ args [pExpr e1, (show . U.getUnique $ b) ++ "." ++ pExpr e2]
-pExpr (Case e b ty alts)  =
-    "case" ++ args [pExpr e, outVar b, prType ty, "altsTODO"]
-pExpr (Cast e co) = "coerce" ++ args [pExpr e]
-pExpr (Tick t e) = error "TODO: Tick case of pExpr."
-pExpr (Type ty) = prType ty
-pExpr (Coercion co) = error "TODO: Coercion case of pExpr."
+prExpr :: CoreExpr -> String
+prExpr v@(Var x) = show $ U.getUnique x
+prExpr l@(Lit a) = "lit" ++ "[" ++ OP.showSDocUnsafe (OP.ppr l) ++ "]"
+prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
+prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
+prExpr (Let (Rec []) e2) = prExpr e2
+prExpr (Let (Rec ((b, e1):bs)) e2) =
+  let rest = prExpr (Let (Rec bs) e2) in
+    "letrec" ++ args [prExpr e1, outVar b ++ "." ++ rest]
+prExpr (Let (NonRec b e1) e2) =
+    "let" ++ args [prExpr e1, (show . U.getUnique $ b) ++ "." ++ prExpr e2]
+prExpr (Case e b ty alts)  =
+    "case" ++ args [prExpr e, outVar b, prType ty, "altsTODO"]
+prExpr (Cast e co) = "coerce" ++ args [prExpr e]
+prExpr (Tick t e) = error "TODO: Tick case of prExpr."
+prExpr (Type ty) = prType ty
+prExpr (Coercion co) = error "TODO: Coercion case of prExpr."
 
 prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
-prettyDecl (b, e) = outVar b ++ "." ++ pExpr e
+prettyDecl (b, e) = outVar b ++ "." ++ prExpr e
 
 prBind :: CoreBind -> String
-prBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), pExpr e]
-prBind (Rec [])     = ""
+prBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), prExpr e]
 prBind (Rec bs)     = "declRec" ++ args (prettyDecl <$> bs)
 
 compileToCore :: String -> IO [CoreBind]
