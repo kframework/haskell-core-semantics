@@ -54,10 +54,10 @@ pExpr (Coercion co) = error "TODO: Coercion case of pExpr."
 prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
 prettyDecl (b, e) = outVar b ++ "." ++ pExpr e
 
-prettyBind :: CoreBind -> String
-prettyBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), pExpr e]
-prettyBind (Rec [])     = ""
-prettyBind (Rec bs)     = "declRec" ++ args (prettyDecl <$> bs)
+prBind :: CoreBind -> String
+prBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), pExpr e]
+prBind (Rec [])     = ""
+prBind (Rec bs)     = "declRec" ++ args (prettyDecl <$> bs)
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
@@ -72,4 +72,4 @@ main :: IO ()
 main = do
   args <- getArgs
   c <- compileToCore (head args)
-  mapM_ (putStrLn . prettyBind) c
+  mapM_ (putStrLn . prBind) c
