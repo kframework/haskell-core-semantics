@@ -42,7 +42,21 @@ prTyCon tc
   | isPromotedDataCon tc = "promDataCon()"
 
 prCoercion :: Coercion -> String
-prCoercion = error "TODO"
+prCoercion (Refl r ty) = error "TODO"
+prCoercion (TyConAppCo role tc cs) = error "TODO"
+prCoercion (AppCo coe1 coe2) = error "TODO"
+prCoercion (CoVarCo cv) = error "TODO"
+prCoercion (AxiomInstCo cab bi cs) = error "TODO"
+prCoercion (UnivCo ucp r ty1 ty2) = error "TODO"
+prCoercion (SymCo co) = error "TODO"
+prCoercion (TransCo co1 co2) = error "TODO"
+prCoercion (AxiomRuleCo car cs) = error "TODO"
+prCoercion (NthCo i cs) = error "TODO"
+prCoercion (LRCo co1 co2) = error "TODO"
+prCoercion (InstCo co1 co2) = error "TODO"
+prCoercion (CoherenceCo co kco) = error "TODO"
+prCoercion (KindCo co) = error "TODO"
+prCoercion (SubCo co) = error "TODO"
 
 prType :: Type -> String
 prType (TyVarTy x) =
