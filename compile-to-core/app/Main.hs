@@ -14,10 +14,10 @@ import           Literal
 import qualified Name
 import qualified Outputable         as OP
 import           System.Environment
-import           TyCoRep            (Type (..), TyBinder (..))
+import           TyCon
+import           TyCoRep            (Coercion (..), TyBinder (..), Type (..))
 import qualified Unique             as U
 import           Var
-import TyCon
 
 args :: [String] -> String
 args ss = "(" ++ intercalate "; " ss ++ ")"
@@ -27,25 +27,38 @@ outVar = show . U.getUnique
 
 outTyVar :: TyBinder -> String
 outTyVar (Named tyvar vf) = show $ U.getUnique tyvar
-outTyVar (Anon ty) = prType ty
+outTyVar (Anon ty)        = prType ty
+
+prList :: [String] -> String
+prList = intercalate "::"
 
 prTyCon :: TyCon -> String
 prTyCon tc
-  | isFunTyCon tc = "arrtycon"
-  | isAlgTyCon tc || isTupleTyCon tc || isTypeSynonymTyCon tc =
-      "algTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
+  | isFunTyCon tc = "arrTyCon"
+  | isAlgTyCon tc = "algTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
+  | isTypeSynonymTyCon tc = "synTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
+  | isTupleTyCon tc = "tupleTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
   | isPrimTyCon tc = "primTyCon()"
   | isPromotedDataCon tc = "promDataCon()"
 
+prCoercion :: Coercion -> String
+prCoercion = error "TODO"
+
 prType :: Type -> String
-prType (TyVarTy x)      = outVar x
-prType (AppTy ty1 ty2)  = "typapp" ++ args [prType ty1, prType ty2]
-prType (TyConApp tc kt) = error "TODO: TyConApp case of prType."
+prType (TyVarTy x) =
+  outVar x
+prType (AppTy ty1 ty2)  =
+  "appTy" ++ args [prType ty1, prType ty2]
+prType (TyConApp tc kt) =
+  "tyConApp" ++ args [prList (prType <$> kt)]
 prType (ForAllTy (Named tyvar vf) ty) =
-    "forall" ++ args [show (U.getUnique tyvar) ++ "." ++ prType ty]
-prType (ForAllTy (Anon ty1) ty2) = "arr" ++ args [prType ty1, prType ty2]
-prType (LitTy tyl)      = OP.showSDocUnsafe (OP.ppr tyl)
-prType (CastTy ty kindco) = error "TODO: CastTy case of prType."
+  "forallTy" ++ args [show (U.getUnique tyvar) ++ "." ++ prType ty]
+prType (ForAllTy (Anon ty1) ty2) =
+  "arr" ++ args [prType ty1, prType ty2]
+prType (LitTy tyl) =
+  OP.showSDocUnsafe (OP.ppr tyl)
+prType (CastTy ty kindco) = error "TODO"
+  -- "castTy" ++ (args (prType <$> [ty, kind]))
 prType (CoercionTy co) = error "TODO: CoercionTy case of prType."
 
 prExpr :: CoreExpr -> String
