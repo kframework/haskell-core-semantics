@@ -132,7 +132,8 @@ prType (LitTy tyl) =
   OP.showSDocUnsafe (OP.ppr tyl)
 prType (CastTy ty kindco) =
   "castTy" ++ args [prType ty, prCoercion kindco]
-prType (CoercionTy co) = error "TODO: CoercionTy case of prType."
+prType (CoercionTy co) =
+  "coercionTy" ++ args [prCoercion co]
 
 prExpr :: CoreExpr -> String
 prExpr v@(Var x) = show $ U.getUnique x
