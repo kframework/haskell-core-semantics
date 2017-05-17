@@ -72,6 +72,11 @@ prCoAxiom ca =
     in
       "coAxiom" ++ args [t, rho, axBranchList]
 
+prProvenance :: UnivCoProvenance -> String
+prProvenance UnsafeCoerceProv = "unsafeProv"
+prProvenance (PhantomProv _) = "phantProv"
+prProvenance (ProofIrrelProv _) = "proofIrrelProv"
+
 prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
@@ -89,8 +94,8 @@ prCoercion (CoVarCo v) =
 -- TODO: Complete.
 prCoercion (AxiomInstCo cab bi cs) =
   "axiomInstCo" ++ args [prCoAxiom cab, error "TODO"]
-prCoercion (UnivCo _ r ty1 ty2)  =
-  "univCo" ++ args [prType ty1, prType ty2, prRole r]
+prCoercion (UnivCo prov r ty1 ty2)  =
+  "univCo" ++ args [prProvenance prov, prType ty1, prType ty2, prRole r]
 prCoercion (SymCo co) =
   "symCo" ++ args [prCoercion co]
 prCoercion (TransCo co1 co2) =
@@ -125,8 +130,8 @@ prType (ForAllTy (Anon ty1) ty2) =
   "arr" ++ args [prType ty1, prType ty2]
 prType (LitTy tyl) =
   OP.showSDocUnsafe (OP.ppr tyl)
-prType (CastTy ty kindco) = error "TODO"
-  -- "castTy" ++ (args (prType <$> [ty, kind]))
+prType (CastTy ty kindco) =
+  "castTy" ++ args [prType ty, prCoercion kindco]
 prType (CoercionTy co) = error "TODO: CoercionTy case of prType."
 
 prExpr :: CoreExpr -> String
