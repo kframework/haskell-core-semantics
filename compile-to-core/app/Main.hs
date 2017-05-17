@@ -3,6 +3,9 @@
 module Main where
 
 import qualified BasicTypes
+import           CoAxiom            (Branched, CoAxBranch (..), CoAxiom (..),
+                                     Role (..), cab_lhs, cab_rhs, co_ax_tc,
+                                     fromBranches)
 import           Control.Monad      ((<=<))
 import           CoreSyn
 import           Data.List          (concat, intercalate)
@@ -29,8 +32,8 @@ outTyVar :: TyBinder -> String
 outTyVar (Named tyvar vf) = show $ U.getUnique tyvar
 outTyVar (Anon ty)        = prType ty
 
-prList :: [String] -> String
-prList = intercalate "::"
+prList :: String -> [String] -> String
+prList t ss = t ++ ">>>" ++ intercalate "::" ss
 
 prTyCon :: TyCon -> String
 prTyCon tc
@@ -41,22 +44,50 @@ prTyCon tc
   | isPrimTyCon tc = "primTyCon()"
   | isPromotedDataCon tc = "promDataCon()"
 
+prRole :: Role -> String
+prRole Nominal          = "nom"
+prRole Representational = "repr"
+prRole Phantom          = "phant"
+
+prCoAxBranch :: CoAxBranch -> String
+prCoAxBranch cab =
+  let
+    vars    = cab_tvs cab
+    lhs_str = prType $ cab_rhs cab
+    rhs_str = args $ prType <$> cab_lhs cab
+    _       = error "TODO"
+  in
+    "coAxBranch" ++ args [lhs_str, rhs_str]
+
+prCoAxiom :: CoAxiom Branched -> String
+prCoAxiom ca =
+    let
+      t            = prTyCon $ co_ax_tc ca
+      rho          = prRole $ co_ax_role ca
+      branches     =  fromBranches (co_ax_branches ca)
+      axBranchList = prList "CoAxBranch" $ prCoAxBranch <$> branches
+    in
+      "coAxiom" ++ args [t, rho, axBranchList]
+
 prCoercion :: Coercion -> String
-prCoercion (Refl r ty) = error "TODO"
-prCoercion (TyConAppCo role tc cs) = error "TODO"
-prCoercion (AppCo coe1 coe2) = error "TODO"
-prCoercion (CoVarCo cv) = error "TODO"
-prCoercion (AxiomInstCo cab bi cs) = error "TODO"
-prCoercion (UnivCo ucp r ty1 ty2) = error "TODO"
-prCoercion (SymCo co) = error "TODO"
-prCoercion (TransCo co1 co2) = error "TODO"
-prCoercion (AxiomRuleCo car cs) = error "TODO"
-prCoercion (NthCo i cs) = error "TODO"
-prCoercion (LRCo co1 co2) = error "TODO"
-prCoercion (InstCo co1 co2) = error "TODO"
-prCoercion (CoherenceCo co kco) = error "TODO"
-prCoercion (KindCo co) = error "TODO"
-prCoercion (SubCo co) = error "TODO"
+prCoercion (Refl r ty)             = "refl()"
+prCoercion (TyConAppCo role tc cs) =
+    "tyConAppCo" ++ args ([prRole role, prTyCon tc] ++ (prCoercion <$> cs))
+prCoercion (AppCo coe1 coe2)       = error "TODO"
+  "appCo" ++ args (prCoercion <$> [coe1, coe2])
+prCoercion (CoVarCo v)             = outVar v
+prCoercion (AxiomInstCo cab bi cs) =
+    "axiomInstCo" ++ error "TODO"
+prCoercion (UnivCo ucp r ty1 ty2)  = error "TODO"
+prCoercion (SymCo co)              = error "TODO"
+prCoercion (TransCo co1 co2)       = error "TODO"
+prCoercion (AxiomRuleCo car cs)    = error "TODO"
+prCoercion (NthCo i cs)            = error "TODO"
+prCoercion (LRCo co1 co2)          = error "TODO"
+prCoercion (InstCo co1 co2)        = error "TODO"
+prCoercion (CoherenceCo co kco)    = error "TODO"
+prCoercion (KindCo co)             = error "TODO"
+prCoercion (SubCo co)              = error "TODO"
 
 prType :: Type -> String
 prType (TyVarTy x) =
@@ -64,7 +95,7 @@ prType (TyVarTy x) =
 prType (AppTy ty1 ty2)  =
   "appTy" ++ args [prType ty1, prType ty2]
 prType (TyConApp tc kt) =
-  "tyConApp" ++ args [prList (prType <$> kt)]
+  "tyConApp" ++ args [prList "type" (prType <$> kt)]
 prType (ForAllTy (Named tyvar vf) ty) =
   "forallTy" ++ args [show (U.getUnique tyvar) ++ "." ++ prType ty]
 prType (ForAllTy (Anon ty1) ty2) =
