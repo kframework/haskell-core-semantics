@@ -4,12 +4,13 @@ module Main where
 
 import qualified BasicTypes
 import           CoAxiom            (Branched, CoAxBranch (..), CoAxiom (..),
-                                     Role (..), cab_lhs, cab_rhs, co_ax_tc,
-                                     fromBranches)
+                                     CoAxiomRule (..), Role (..), cab_lhs,
+                                     cab_rhs, co_ax_tc, fromBranches)
 import           Control.Monad      ((<=<))
 import           CoreSyn
 import           Data.List          (concat, intercalate)
 import           DynFlags           (defaultLogAction, ghcMode)
+import           FastString         (unpackFS)
 import           GHC
 import           GHC.Paths          (libdir)
 import           HscTypes           (mg_binds)
@@ -18,7 +19,9 @@ import qualified Name
 import qualified Outputable         as OP
 import           System.Environment
 import           TyCon
-import           TyCoRep            (Coercion (..), TyBinder (..), Type (..))
+import           TyCoRep            (Coercion (..), KindCoercion (..),
+                                     LeftOrRight (..), TyBinder (..), Type (..),
+                                     UnivCoProvenance (..))
 import qualified Unique             as U
 import           Var
 
@@ -69,25 +72,46 @@ prCoAxiom ca =
     in
       "coAxiom" ++ args [t, rho, axBranchList]
 
+prKindCoercion :: KindCoercion -> String
+prKindCoercion kc = error "TODO"
+
+prCoAxiomRule :: CoAxiomRule -> String
+prCoAxiomRule car = unpackFS $ coaxrName car
+
 prCoercion :: Coercion -> String
 prCoercion (Refl r ty)             = "refl()"
 prCoercion (TyConAppCo role tc cs) =
-    "tyConAppCo" ++ args ([prRole role, prTyCon tc] ++ (prCoercion <$> cs))
+  "tyConAppCo" ++ args ([prRole role, prTyCon tc] ++ (prCoercion <$> cs))
+-- TODO: Complete
 prCoercion (AppCo coe1 coe2)       = error "TODO"
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
-prCoercion (CoVarCo v)             = outVar v
+prCoercion (CoVarCo v) =
+  outVar v
+-- TODO: Complete.
 prCoercion (AxiomInstCo cab bi cs) =
-    "axiomInstCo" ++ error "TODO"
-prCoercion (UnivCo ucp r ty1 ty2)  = error "TODO"
-prCoercion (SymCo co)              = error "TODO"
-prCoercion (TransCo co1 co2)       = error "TODO"
-prCoercion (AxiomRuleCo car cs)    = error "TODO"
-prCoercion (NthCo i cs)            = error "TODO"
-prCoercion (LRCo co1 co2)          = error "TODO"
-prCoercion (InstCo co1 co2)        = error "TODO"
-prCoercion (CoherenceCo co kco)    = error "TODO"
-prCoercion (KindCo co)             = error "TODO"
-prCoercion (SubCo co)              = error "TODO"
+  "axiomInstCo" ++ args [prCoAxiom cab, error "TODO"]
+prCoercion (UnivCo _ r ty1 ty2)  =
+  "univCo" ++ args [prType ty1, prType ty2, prRole r]
+prCoercion (SymCo co) =
+  "symCo" ++ args [prCoercion co]
+prCoercion (TransCo co1 co2) =
+  "transCo" ++ args [prCoercion co1, prCoercion co2]
+prCoercion (AxiomRuleCo car cs) =
+  "axiomRuleCo" ++ args (prCoercion <$> cs)
+prCoercion (NthCo i co) =
+  "nthCo" ++ args [show i, prCoercion co]
+prCoercion (LRCo CLeft co) =
+  "leftProjCo" ++ args [prCoercion co]
+prCoercion (LRCo CRight co) =
+  "rightProjCo" ++ args [prCoercion co]
+prCoercion (InstCo co1 co2) =
+  "instCo" ++ args [prCoercion co1, prCoercion co2]
+prCoercion (CoherenceCo co kco) =
+  "coherenceCo" ++ args [prCoercion co, prCoercion kco]
+prCoercion (KindCo co) =
+  "kindCo" ++ args [prCoercion co]
+prCoercion (SubCo co) =
+  "subCo" ++ args [prCoercion co]
 
 prType :: Type -> String
 prType (TyVarTy x) =
