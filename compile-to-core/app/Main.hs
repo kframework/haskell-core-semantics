@@ -72,18 +72,17 @@ prCoAxiom ca =
     in
       "coAxiom" ++ args [t, rho, axBranchList]
 
-prKindCoercion :: KindCoercion -> String
-prKindCoercion kc = error "TODO"
-
 prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
 prCoercion :: Coercion -> String
-prCoercion (Refl r ty)             = "refl()"
+prCoercion (Refl r ty) = "refl()"
 prCoercion (TyConAppCo role tc cs) =
-  "tyConAppCo" ++ args ([prRole role, prTyCon tc] ++ (prCoercion <$> cs))
--- TODO: Complete
-prCoercion (AppCo coe1 coe2)       = error "TODO"
+  let
+    csArg = prList "Coercion" (prCoercion <$> cs)
+  in
+    "tyConAppCo" ++ args (prRole role : prTyCon tc : (prCoercion <$> cs))
+prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
 prCoercion (CoVarCo v) =
   outVar v
