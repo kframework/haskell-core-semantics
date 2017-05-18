@@ -20,10 +20,11 @@ import           Literal
 import qualified Name
 import qualified Outputable            as OP
 import           System.Environment
-import           TyCon
+import           TyCon                 (isAlgTyCon, isPromotedDataCon,
+                                        isTupleTyCon, tyConKind)
 import           TyCoRep               (Coercion (..), KindCoercion (..),
-                                        LeftOrRight (..), TyBinder (..),
-                                        TyLit (..), Type (..),
+                                        KindOrType, LeftOrRight (..),
+                                        TyBinder (..), TyLit (..), Type (..),
                                         UnivCoProvenance (..))
 import qualified Unique                as U
 import           Var                   (Var, isId, isTyVar, varName, varType)
@@ -31,24 +32,30 @@ import           Var                   (Var, isId, isTyVar, varName, varType)
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
-outVar :: CoreBndr -> String
-outVar = show . U.getUnique
 
 prVar :: Var -> String
-prVar e
-  | isTyVar e = "tyVar" ++ args [prType (varType e), outVar e]
-  | isId e = "tmVar" ++ args [prType (varType e), outVar e]
+prVar e =
+  let
+    outVar :: CoreBndr -> String
+    outVar = show . U.getUnique
+  in
+    if isTyVar e
+    then "tyVar" ++ args [prType (varType e), outVar e]
+    else
+      if isId e
+      then "tmVar" ++ args [prType (varType e), outVar e]
+      else error "This case should not happen."
 
 prList :: String -> [String] -> String
-prList t ss = t ++ ">>>" ++ intercalate "::" ss
+prList t = foldr (\s -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Empty")
 
 prTyCon :: TyCon -> String
 prTyCon tc
   | isFunTyCon tc = "arrTyCon"
-  | isAlgTyCon tc = "algTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
-  | isTypeSynonymTyCon tc = "synTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
-  | isTupleTyCon tc = "tupleTyCon" ++ "{" ++ prType (tyConKind tc) ++ "}"
-  | isPrimTyCon tc = "primTyCon()"
+  | isAlgTyCon tc = "algTyCon()" -- ++ args [prType $ tyConKind tc]
+  | isTypeSynonymTyCon tc = "synTyCon" ++ args [prType $ tyConKind tc]
+  | isTupleTyCon tc = "tupleTyCon()" -- ++ args [prType $ tyConKind tc]
+  | isPrimTyCon tc = "primTyCon()" -- ++ args [prType $ tyConKind tc]
   | isPromotedDataCon tc = "promDataCon()"
 
 prRole :: Role -> String
@@ -93,8 +100,8 @@ prCoercion (TyConAppCo role tc cs) =
     "tyConAppCo" ++ args (prRole role : prTyCon tc : (prCoercion <$> cs))
 prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
-prCoercion (CoVarCo v) =
-  outVar v
+prCoercion (CoVarCo v) = error "TODO"
+  -- outVar v
 -- TODO: Complete.
 prCoercion (AxiomInstCo cab bi cs) =
   "axiomInstCo" ++ args [prCoAxiom cab, error "TODO"]
@@ -122,12 +129,11 @@ prCoercion (SubCo co) =
   "subCo" ++ args [prCoercion co]
 
 prType :: Type -> String
-prType (TyVarTy x) =
-  outVar x
+prType (TyVarTy x) = prVar x
 prType (AppTy ty1 ty2)  =
   "appTy" ++ args [prType ty1, prType ty2]
 prType (TyConApp tc kt) =
-  "tyConApp" ++ args [prList "type" (prType <$> kt)]
+  "tyConApp" ++ args (prTyCon tc : (prType <$> kt))
 prType (ForAllTy (Named tyvar vf) ty) =
   "forallTy" ++ args [prVar tyvar, prType ty]
 prType (ForAllTy (Anon ty1) ty2) =
@@ -161,33 +167,31 @@ prLit (MachLabel fs Nothing IsData) =
 prLit (LitInteger n ty) = "litInt" ++ args [show n, prType ty]
 
 prTyLit :: TyLit -> String
-prTyLit (NumTyLit n) = "numTyLit" ++ args [show n]
+prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
 prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
+
+prBinding :: Bind CoreBndr -> String
+prBinding (NonRec b e) = "nonRec" ++ args [error "TODO", prExpr e]
+prBinding (Rec bs) =
+  let foo [] = "emptyBind"
+      foo ((b, e):bs) = "bind" ++ args [error "TODO", prExpr e] ++ foo bs
+  in "Rec" ++ args [foo bs]
 
 prExpr :: CoreExpr -> String
 prExpr v@(Var x) = prVar x
 prExpr l@(Lit a) = prLit a
 prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
 prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
-prExpr (Let (Rec []) e2) = prExpr e2
-prExpr (Let (Rec ((b, e1):bs)) e2) =
-  let rest = prExpr (Let (Rec bs) e2) in
-    "letrec" ++ args [prExpr e1, outVar b ++ "." ++ rest]
-prExpr (Let (NonRec b e1) e2) =
-    "let" ++ args [prExpr e1, (show . U.getUnique $ b) ++ "." ++ prExpr e2]
+prExpr (Let b e) = "let" ++ args [prBinding b, prExpr e]
 prExpr (Case e b ty alts)  =
-    "case" ++ args [prExpr e, outVar b, prType ty, "altsTODO"]
+    "case" ++ args [prExpr e, error "TODO", prType ty, "altsTODO"]
 prExpr (Cast e co) = "coerce" ++ args [prExpr e]
 prExpr (Tick t e) = error "TODO: Tick case of prExpr."
 prExpr (Type ty) = prType ty
 prExpr (Coercion co) = error "TODO: Coercion case of prExpr."
 
 prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
-prettyDecl (b, e) = outVar b ++ "." ++ prExpr e
-
-prBind :: CoreBind -> String
-prBind (NonRec x e) = "decl" ++ args [show (U.getUnique x), prExpr e]
-prBind (Rec bs)     = "declRec" ++ args (prettyDecl <$> bs)
+prettyDecl (b, e) = (error "TODO") ++ "." ++ prExpr e
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
@@ -202,4 +206,4 @@ main :: IO ()
 main = do
   args <- getArgs
   c <- compileToCore (head args)
-  mapM_ (putStrLn . prBind) c
+  mapM_ (putStrLn . prBinding) c
