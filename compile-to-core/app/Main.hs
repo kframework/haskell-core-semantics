@@ -2,38 +2,41 @@
 
 module Main where
 
+import           BasicTypes            (FunctionOrData (..))
 import qualified BasicTypes
-import           CoAxiom            (Branched, CoAxBranch (..), CoAxiom (..),
-                                     CoAxiomRule (..), Role (..), cab_lhs,
-                                     cab_rhs, co_ax_tc, fromBranches)
-import           Control.Monad      ((<=<))
+import           CoAxiom               (Branched, CoAxBranch (..), CoAxiom (..),
+                                        CoAxiomRule (..), Role (..), cab_lhs,
+                                        cab_rhs, co_ax_tc, fromBranches)
+import           Control.Monad         ((<=<))
 import           CoreSyn
-import           Data.List          (concat, intercalate)
-import           DynFlags           (defaultLogAction, ghcMode)
-import           FastString         (unpackFS)
+import           Data.ByteString.Char8 (unpack)
+import           Data.List             (concat, intercalate)
+import           DynFlags              (defaultLogAction, ghcMode)
+import           FastString            (unpackFS)
 import           GHC
-import           GHC.Paths          (libdir)
-import           HscTypes           (mg_binds)
+import           GHC.Paths             (libdir)
+import           HscTypes              (mg_binds)
 import           Literal
 import qualified Name
-import qualified Outputable         as OP
+import qualified Outputable            as OP
 import           System.Environment
 import           TyCon
-import           TyCoRep            (Coercion (..), KindCoercion (..),
-                                     LeftOrRight (..), TyBinder (..), Type (..),
-                                     UnivCoProvenance (..))
-import qualified Unique             as U
-import           Var
+import           TyCoRep               (Coercion (..), KindCoercion (..),
+                                        LeftOrRight (..), TyBinder (..),
+                                        Type (..), UnivCoProvenance (..))
+import qualified Unique                as U
+import           Var                   (Var, isId, isTyVar, varName, varType)
 
 args :: [String] -> String
-args ss = "(" ++ intercalate "; " ss ++ ")"
+args ss = "(" ++ intercalate ", " ss ++ ")"
 
 outVar :: CoreBndr -> String
 outVar = show . U.getUnique
 
-outTyVar :: TyBinder -> String
-outTyVar (Named tyvar vf) = show $ U.getUnique tyvar
-outTyVar (Anon ty)        = prType ty
+prVar :: Var -> String
+prVar e
+  | isTyVar e = "tyVar" ++ args [prType (varType e), outVar e]
+  | isId e = "tmVar" ++ args [prType (varType e), outVar e]
 
 prList :: String -> [String] -> String
 prList t ss = t ++ ">>>" ++ intercalate "::" ss
@@ -73,8 +76,8 @@ prCoAxiom ca =
       "coAxiom" ++ args [t, rho, axBranchList]
 
 prProvenance :: UnivCoProvenance -> String
-prProvenance UnsafeCoerceProv = "unsafeProv"
-prProvenance (PhantomProv _) = "phantProv"
+prProvenance UnsafeCoerceProv   = "unsafeProv"
+prProvenance (PhantomProv _)    = "phantProv"
 prProvenance (ProofIrrelProv _) = "proofIrrelProv"
 
 prCoAxiomRule :: CoAxiomRule -> String
@@ -125,7 +128,7 @@ prType (AppTy ty1 ty2)  =
 prType (TyConApp tc kt) =
   "tyConApp" ++ args [prList "type" (prType <$> kt)]
 prType (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [show (U.getUnique tyvar) ++ "." ++ prType ty]
+  "forallTy" ++ args [prVar tyvar, prType ty]
 prType (ForAllTy (Anon ty1) ty2) =
   "arr" ++ args [prType ty1, prType ty2]
 prType (LitTy tyl) =
@@ -135,8 +138,30 @@ prType (CastTy ty kindco) =
 prType (CoercionTy co) =
   "coercionTy" ++ args [prCoercion co]
 
+prLit :: Literal -> String
+prLit (MachChar c)          = "machChar" ++ args [[c]]
+prLit (MachStr bs)          = "machStr" ++ args [unpack bs]
+prLit MachNullAddr          = "nullAddr"
+prLit (MachInt n)           = "machInt" ++ args [show n]
+prLit (MachInt64 n)         = "machInt64" ++ args [show n]
+prLit (MachWord n)          = "machWord" ++ args [show n]
+prLit (MachWord64 n)        = "machWord64" ++ args [show n]
+prLit (MachFloat r)         = "machFloat" ++ args [show r]
+prLit (MachDouble r)        = "machDouble" ++ args [show r]
+-- TODO: It might be nice to consider an alternative way of handling
+-- instead of having separate operators `Maybe Integer`.
+prLit (MachLabel fs (Just n) IsFunction) =
+  "machLabelFunSome" ++ args [unpackFS fs, show n]
+prLit (MachLabel fs (Just n) IsData) =
+  "machLabelDataSome" ++ args [unpackFS fs, show n]
+prLit (MachLabel fs Nothing IsFunction) =
+  "machLabelFunNone" ++ args [unpackFS fs]
+prLit (MachLabel fs Nothing IsData) =
+  "machLabelDataNone" ++ args [unpackFS fs]
+prLit (LitInteger n ty) = "litInt" ++ args [show n, prType ty]
+
 prExpr :: CoreExpr -> String
-prExpr v@(Var x) = show $ U.getUnique x
+prExpr v@(Var x) = prVar x
 prExpr l@(Lit a) = "lit" ++ "[" ++ OP.showSDocUnsafe (OP.ppr l) ++ "]"
 prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
 prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
