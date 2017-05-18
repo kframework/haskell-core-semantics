@@ -23,7 +23,8 @@ import           System.Environment
 import           TyCon
 import           TyCoRep               (Coercion (..), KindCoercion (..),
                                         LeftOrRight (..), TyBinder (..),
-                                        Type (..), UnivCoProvenance (..))
+                                        TyLit (..), Type (..),
+                                        UnivCoProvenance (..))
 import qualified Unique                as U
 import           Var                   (Var, isId, isTyVar, varName, varType)
 
@@ -131,8 +132,7 @@ prType (ForAllTy (Named tyvar vf) ty) =
   "forallTy" ++ args [prVar tyvar, prType ty]
 prType (ForAllTy (Anon ty1) ty2) =
   "arr" ++ args [prType ty1, prType ty2]
-prType (LitTy tyl) =
-  OP.showSDocUnsafe (OP.ppr tyl)
+prType (LitTy tyl) = prTyLit tyl
 prType (CastTy ty kindco) =
   "castTy" ++ args [prType ty, prCoercion kindco]
 prType (CoercionTy co) =
@@ -160,9 +160,13 @@ prLit (MachLabel fs Nothing IsData) =
   "machLabelDataNone" ++ args [unpackFS fs]
 prLit (LitInteger n ty) = "litInt" ++ args [show n, prType ty]
 
+prTyLit :: TyLit -> String
+prTyLit (NumTyLit n) = "numTyLit" ++ args [show n]
+prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
+
 prExpr :: CoreExpr -> String
 prExpr v@(Var x) = prVar x
-prExpr l@(Lit a) = "lit" ++ "[" ++ OP.showSDocUnsafe (OP.ppr l) ++ "]"
+prExpr l@(Lit a) = prLit a
 prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
 prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
 prExpr (Let (Rec []) e2) = prExpr e2
