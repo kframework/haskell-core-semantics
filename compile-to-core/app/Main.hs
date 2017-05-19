@@ -3,37 +3,32 @@
 module Main where
 
 import           BasicTypes            (FunctionOrData (..))
-import qualified BasicTypes
 import           CoAxiom               (Branched, CoAxBranch (..), CoAxiom (..),
                                         CoAxiomRule (..), Role (..), cab_lhs,
                                         cab_rhs, co_ax_tc, fromBranches)
 import           Control.Monad         ((<=<))
 import           CoreSyn
 import           Data.ByteString.Char8 (unpack)
-import           Data.List             (concat, intercalate)
-import           DynFlags              (defaultLogAction, ghcMode)
+import           Data.List             (intercalate)
 import           FastString            (unpackFS)
 import           GHC
 import           GHC.Paths             (libdir)
 import           HscTypes              (mg_binds)
 import           Literal
-import qualified Name
 import qualified Outputable            as OP
 import           System.Environment
 import           TyCon                 (isAlgTyCon, isPromotedDataCon,
                                         isPromotedDataCon_maybe, isTupleTyCon,
                                         tyConKind, tyConName)
-import           TyCoRep               (Coercion (..), KindCoercion (..),
-                                        KindOrType, LeftOrRight (..),
+import           TyCoRep               (Coercion (..), LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
-                                        UnivCoProvenance (..))
-import           TysPrim               (eqPrimTyCon, eqReprPrimTyCon,
-                                        intPrimTyCon, primTyCons)
-
+                                        UnivCoProvenance (..),
+                                        VisibilityFlag (..))
 import qualified Unique                as U
-import           Var                   (Var, isId, isTyVar, varName, varType)
+import           Var                   (Var, isId, isTyVar, varType)
 
-todo = error "TODO"
+errorTODO :: a
+errorTODO = error "TODO"
 
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
@@ -52,7 +47,8 @@ prVar e =
       else error "This case should not happen."
 
 prList :: String -> [String] -> String
-prList t = foldr (\s -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Empty")
+prList t =
+  foldr (\_ -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Empty")
 
 prName :: Name -> String
 prName n = OP.showSDocUnsafe (OP.ppr n)
@@ -93,6 +89,7 @@ prTyCon tc
       case isPromotedDataCon_maybe tc of
         Just tc' -> "promDataCon" ++ args [prDataCon tc']
         Nothing  -> error "there should be a dataCon"
+  | otherwise = error "InternalError: this case must not have happened."
 
 prRole :: Role -> String
 prRole Nominal          = "nom"
@@ -123,24 +120,30 @@ prProvenance :: UnivCoProvenance -> String
 prProvenance UnsafeCoerceProv   = "unsafeProv"
 prProvenance (PhantomProv _)    = "phantProv"
 prProvenance (ProofIrrelProv _) = "proofIrrelProv"
+prProvenance (PluginProv _) = "pluginProv"
+prProvenance (HoleProv _) = "holeProv"
 
+-- TODO: Make sure that this is what we want.
 prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
 prCoercion :: Coercion -> String
-prCoercion (Refl r ty) = "refl()"
+prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType ty]
 prCoercion (TyConAppCo role tc cs) =
   let
-    csArg = prList "Coercion" (prCoercion <$> cs)
+    csArg = prList "coercion" (prCoercion <$> cs)
   in
-    "tyConAppCo" ++ args (prRole role : prTyCon tc : (prCoercion <$> cs))
+    "tyConAppCo" ++ args (prRole role : prTyCon tc : [csArg])
 prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
-prCoercion (CoVarCo v) = error "TODO"
-  -- outVar v
 -- TODO: Complete.
+prCoercion (CoVarCo _) = errorTODO
 prCoercion (AxiomInstCo cab bi cs) =
-  "axiomInstCo" ++ args [prCoAxiom cab, error "TODO"]
+  let
+    csArgs = prList "coercion" $ prCoercion <$> cs
+    biArg = "brIndex" ++ args [show bi]
+  in
+    "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
 prCoercion (UnivCo prov r ty1 ty2)  =
   "univCo" ++ args [prProvenance prov, prType ty1, prType ty2, prRole r]
 prCoercion (SymCo co) =
@@ -148,7 +151,7 @@ prCoercion (SymCo co) =
 prCoercion (TransCo co1 co2) =
   "transCo" ++ args [prCoercion co1, prCoercion co2]
 prCoercion (AxiomRuleCo car cs) =
-  "axiomRuleCo" ++ args (prCoercion <$> cs)
+  "axiomRuleCo" ++ args (prCoAxiomRule car : (prCoercion <$> cs))
 prCoercion (NthCo i co) =
   "nthCo" ++ args [show i, prCoercion co]
 prCoercion (LRCo CLeft co) =
@@ -163,6 +166,12 @@ prCoercion (KindCo co) =
   "kindCo" ++ args [prCoercion co]
 prCoercion (SubCo co) =
   "subCo" ++ args [prCoercion co]
+prCoercion ForAllCo{} = errorTODO
+
+prVisibilityFlag :: VisibilityFlag -> String
+prVisibilityFlag Visible   = "visible"
+prVisibilityFlag Specified = "specified"
+prVisibilityFlag Invisible = "invisible"
 
 prType :: Type -> String
 prType (TyVarTy x) = prVar x
@@ -171,7 +180,7 @@ prType (AppTy ty1 ty2)  =
 prType (TyConApp tc kt) =
   "tyConApp" ++ args (prTyCon tc : (prType <$> kt))
 prType (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [prVar tyvar, prType ty]
+  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType ty]
 prType (ForAllTy (Anon ty1) ty2) =
   "arr" ++ args [prType ty1, prType ty2]
 prType (LitTy tyl) = prTyLit tyl
@@ -211,12 +220,12 @@ prBinding :: Bind CoreBndr -> String
 prBinding (NonRec b e) = "nonRec" ++ args [prVar b, prExpr e]
 prBinding (Rec bs) =
   let prBinding' [] = "emptyBind"
-      prBinding' ((b, e):bs) = "bind" ++ args [prVar b, prExpr e] ++ prBinding' bs
+      prBinding' ((b, e):bs') = "bind" ++ args [prVar b, prExpr e] ++ prBinding' bs'
   in "Rec" ++ args [prBinding' bs]
 
 prExpr :: CoreExpr -> String
-prExpr v@(Var x) = prVar x
-prExpr l@(Lit a) = prLit a
+prExpr (Var x) = prVar x
+prExpr (Lit a) = prLit a
 prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
 prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
 prExpr (Let b e) = "let" ++ args [prBinding b, prExpr e]
@@ -225,24 +234,24 @@ prExpr (Case e b ty alts)  =
     altsStr = prList "alt" $ prAlt <$> alts
   in
     "case" ++ args [prExpr e, prVar b, prType ty, altsStr]
-prExpr (Cast e co) = "coerce" ++ args [prExpr e]
+prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
 -- TODO: Figure out what to do with `Tickish`.
-prExpr (Tick t e) = todo
+prExpr (Tick _ _) = errorTODO
 prExpr (Type ty) = prType ty
-prExpr (Coercion co) = prCoercion co
+prExpr (Coercion co) = "coerce" ++ args [prCoercion co]
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
-    setSessionDynFlags =<< getSessionDynFlags
+    _ <- setSessionDynFlags =<< getSessionDynFlags
     target <- guessTarget (modName ++ ".hs") Nothing
     setTargets [target]
-    load LoadAllTargets
+    _ <- load LoadAllTargets
     ds <- desugarModule <=< typecheckModule <=< parseModule <=< getModSummary $ mkModuleName modName
     return $ mg_binds . coreModule $ ds
 
 main :: IO ()
 main = do
-  args <- getArgs
-  c <- compileToCore (head args)
+  clArgs <- getArgs
+  c <- compileToCore (head clArgs)
   let putNewLn s = putStrLn (s ++ "\n")
   mapM_ (putNewLn . prBinding) c
