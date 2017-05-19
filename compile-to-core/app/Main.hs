@@ -231,9 +231,6 @@ prExpr (Tick t e) = todo
 prExpr (Type ty) = prType ty
 prExpr (Coercion co) = prCoercion co
 
-prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
-prettyDecl (b, e) = error "TODO" ++ "." ++ prExpr e
-
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
     setSessionDynFlags =<< getSessionDynFlags
