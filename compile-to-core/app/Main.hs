@@ -229,7 +229,7 @@ prExpr (Cast e co) = "coerce" ++ args [prExpr e]
 -- TODO: Figure out what to do with `Tickish`.
 prExpr (Tick t e) = todo
 prExpr (Type ty) = prType ty
-prExpr (Coercion co) = error "TODO: Coercion case of prExpr."
+prExpr (Coercion co) = prCoercion co
 
 prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
 prettyDecl (b, e) = error "TODO" ++ "." ++ prExpr e
