@@ -21,11 +21,14 @@ import qualified Name
 import qualified Outputable            as OP
 import           System.Environment
 import           TyCon                 (isAlgTyCon, isPromotedDataCon,
-                                        isTupleTyCon, tyConKind, tyConName)
+                                        isPromotedDataCon_maybe, isTupleTyCon,
+                                        tyConKind, tyConName)
 import           TyCoRep               (Coercion (..), KindCoercion (..),
                                         KindOrType, LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
                                         UnivCoProvenance (..))
+import           TysPrim               (eqPrimTyCon, eqReprPrimTyCon,
+                                        intPrimTyCon, primTyCons)
 import qualified Unique                as U
 import           Var                   (Var, isId, isTyVar, varName, varType)
 
@@ -68,18 +71,27 @@ prDataCon dc = "dataCon" ++ args [prName $ getName dc]
 prAltCon :: AltCon -> String
 prAltCon (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
 prAltCon (LitAlt lit) = "litAlt" ++ args [prLit lit]
-prAltCon DEFAULT = "defaultAlt()"
+prAltCon DEFAULT      = "defaultAlt()"
+
+prPrimTyCon :: TyCon -> String
+prPrimTyCon tc = todo
 
 prTyCon :: TyCon -> String
 prTyCon tc
-  | isFunTyCon tc = "arrTyCon()"
-  | isTypeSynonymTyCon tc = "synTyCon" ++ args [prType $ tyConKind tc]
-  | isTupleTyCon tc = "tupleTyCon()" ++ args [prType $ tyConKind tc]
+  | isFunTyCon tc =
+      "arrTyCon()"
+  | isTypeSynonymTyCon tc =
+      "synTyCon" ++ args [prType $ tyConKind tc]
+  | isTupleTyCon tc =
+      "tupleTyCon()" ++ args [prType $ tyConKind tc]
   | isAlgTyCon tc =
       let as = [prName (tyConName tc), prType $ tyConKind tc] in
       "algTyCon" ++ args as
   | isPrimTyCon tc = "primTyCon()"
-  | isPromotedDataCon tc = "promDataCon()"
+  | isPromotedDataCon tc =
+      case isPromotedDataCon_maybe tc of
+        Just tc' -> "promDataCon" ++ args [prDataCon tc']
+        Nothing  -> error "there should be a dataCon"
 
 prRole :: Role -> String
 prRole Nominal          = "nom"
