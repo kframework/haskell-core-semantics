@@ -22,7 +22,7 @@ library
 executable to-core
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -O0 -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -Wall -O0 -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , bytestring >= 0.10.8.1
                      , ghc >= 8.0.2
