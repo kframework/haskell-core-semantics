@@ -2,3 +2,5 @@
 TAGS
 *.hi
 *.o
+Foo.hs
+output
