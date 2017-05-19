@@ -29,6 +29,7 @@ import           TyCoRep               (Coercion (..), KindCoercion (..),
                                         UnivCoProvenance (..))
 import           TysPrim               (eqPrimTyCon, eqReprPrimTyCon,
                                         intPrimTyCon, primTyCons)
+
 import qualified Unique                as U
 import           Var                   (Var, isId, isTyVar, varName, varType)
 
@@ -74,7 +75,7 @@ prAltCon (LitAlt lit) = "litAlt" ++ args [prLit lit]
 prAltCon DEFAULT      = "defaultAlt()"
 
 prPrimTyCon :: TyCon -> String
-prPrimTyCon tc = todo
+prPrimTyCon tc = prName $ tyConName tc
 
 prTyCon :: TyCon -> String
 prTyCon tc
@@ -87,7 +88,7 @@ prTyCon tc
   | isAlgTyCon tc =
       let as = [prName (tyConName tc), prType $ tyConKind tc] in
       "algTyCon" ++ args as
-  | isPrimTyCon tc = "primTyCon()"
+  | isPrimTyCon tc = "primTyCon" ++ args [prPrimTyCon tc]
   | isPromotedDataCon tc =
       case isPromotedDataCon_maybe tc of
         Just tc' -> "promDataCon" ++ args [prDataCon tc']
@@ -179,16 +180,17 @@ prType (CastTy ty kindco) =
 prType (CoercionTy co) =
   "coercionTy" ++ args [prCoercion co]
 
+-- TODO: Get this into KORE format.
 prLit :: Literal -> String
-prLit (MachChar c)          = "machChar" ++ args [[c]]
-prLit (MachStr bs)          = "machStr" ++ args [unpack bs]
-prLit MachNullAddr          = "nullAddr"
-prLit (MachInt n)           = "machInt" ++ args [show n]
-prLit (MachInt64 n)         = "machInt64" ++ args [show n]
-prLit (MachWord n)          = "machWord" ++ args [show n]
-prLit (MachWord64 n)        = "machWord64" ++ args [show n]
-prLit (MachFloat r)         = "machFloat" ++ args [show r]
-prLit (MachDouble r)        = "machDouble" ++ args [show r]
+prLit (MachChar c) = "machChar" ++ args [[c]]
+prLit (MachStr bs) = "machStr" ++ args [unpack bs]
+prLit MachNullAddr = "nullAddr"
+prLit (MachInt n) = "machInt" ++ args [show n]
+prLit (MachInt64 n) = "machInt64" ++ args [show n]
+prLit (MachWord n) = "machWord" ++ args [show n]
+prLit (MachWord64 n) = "machWord64" ++ args [show n]
+prLit (MachFloat r) = "machFloat" ++ args [show r]
+prLit (MachDouble r) = "machDouble" ++ args [show r]
 -- TODO: It might be nice to consider an alternative way of handling
 -- instead of having separate operators `Maybe Integer`.
 prLit (MachLabel fs (Just n) IsFunction) =
@@ -241,4 +243,5 @@ main :: IO ()
 main = do
   args <- getArgs
   c <- compileToCore (head args)
-  mapM_ (putStrLn . prBinding) c
+  let putNewLn s = putStrLn (s ++ "\n")
+  mapM_ (putNewLn . prBinding) c
