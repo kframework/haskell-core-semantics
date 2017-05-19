@@ -102,12 +102,12 @@ prRole Phantom          = "phant"
 prCoAxBranch :: CoAxBranch -> String
 prCoAxBranch cab =
   let
-    vars    = cab_tvs cab
-    lhs_str = prType $ cab_rhs cab
-    rhs_str = args $ prType <$> cab_lhs cab
-    _       = error "TODO"
+    tvs     = prList "tyVar" $ prVar <$> cab_tvs cab
+    roles   = prList "role" $ prRole <$> cab_roles cab
+    lhs_str = args $ prType <$> cab_lhs cab
+    rhs_str = prType $ cab_rhs cab
   in
-    "coAxBranch" ++ args [lhs_str, rhs_str]
+    "coAxBranch" ++ args [tvs, roles, lhs_str, rhs_str]
 
 prCoAxiom :: CoAxiom Branched -> String
 prCoAxiom ca =
