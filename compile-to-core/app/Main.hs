@@ -21,7 +21,7 @@ import qualified Name
 import qualified Outputable            as OP
 import           System.Environment
 import           TyCon                 (isAlgTyCon, isPromotedDataCon,
-                                        isTupleTyCon, tyConKind)
+                                        isTupleTyCon, tyConKind, tyConName)
 import           TyCoRep               (Coercion (..), KindCoercion (..),
                                         KindOrType, LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
@@ -31,7 +31,6 @@ import           Var                   (Var, isId, isTyVar, varName, varType)
 
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
-
 
 prVar :: Var -> String
 prVar e =
@@ -49,13 +48,18 @@ prVar e =
 prList :: String -> [String] -> String
 prList t = foldr (\s -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Empty")
 
+prName :: Name -> String
+prName n = OP.showSDocUnsafe (OP.ppr n)
+
 prTyCon :: TyCon -> String
 prTyCon tc
-  | isFunTyCon tc = "arrTyCon"
-  | isAlgTyCon tc = "algTyCon()" -- ++ args [prType $ tyConKind tc]
+  | isFunTyCon tc = "arrTyCon()"
   | isTypeSynonymTyCon tc = "synTyCon" ++ args [prType $ tyConKind tc]
-  | isTupleTyCon tc = "tupleTyCon()" -- ++ args [prType $ tyConKind tc]
-  | isPrimTyCon tc = "primTyCon()" -- ++ args [prType $ tyConKind tc]
+  | isTupleTyCon tc = "tupleTyCon()" ++ args [prType $ tyConKind tc]
+  | isAlgTyCon tc =
+      let as = [prName (tyConName tc), prType $ tyConKind tc] in
+      "algTyCon" ++ args as
+  | isPrimTyCon tc = "primTyCon()"
   | isPromotedDataCon tc = "promDataCon()"
 
 prRole :: Role -> String
@@ -171,11 +175,11 @@ prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
 prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
 
 prBinding :: Bind CoreBndr -> String
-prBinding (NonRec b e) = "nonRec" ++ args [error "TODO", prExpr e]
+prBinding (NonRec b e) = "nonRec" ++ args [prVar b, prExpr e]
 prBinding (Rec bs) =
-  let foo [] = "emptyBind"
-      foo ((b, e):bs) = "bind" ++ args [error "TODO", prExpr e] ++ foo bs
-  in "Rec" ++ args [foo bs]
+  let prBinding' [] = "emptyBind"
+      prBinding' ((b, e):bs) = "bind" ++ args [prVar b, prExpr e] ++ prBinding' bs
+  in "Rec" ++ args [prBinding' bs]
 
 prExpr :: CoreExpr -> String
 prExpr v@(Var x) = prVar x
@@ -191,7 +195,7 @@ prExpr (Type ty) = prType ty
 prExpr (Coercion co) = error "TODO: Coercion case of prExpr."
 
 prettyDecl :: (CoreBndr, Expr CoreBndr) -> String
-prettyDecl (b, e) = (error "TODO") ++ "." ++ prExpr e
+prettyDecl (b, e) = error "TODO" ++ "." ++ prExpr e
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
