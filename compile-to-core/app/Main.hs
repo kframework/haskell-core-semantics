@@ -226,7 +226,8 @@ prExpr (Case e b ty alts)  =
   in
     "case" ++ args [prExpr e, prVar b, prType ty, altsStr]
 prExpr (Cast e co) = "coerce" ++ args [prExpr e]
-prExpr (Tick t e) = error "TODO: Tick case of prExpr."
+-- TODO: Figure out what to do with `Tickish`.
+prExpr (Tick t e) = todo
 prExpr (Type ty) = prType ty
 prExpr (Coercion co) = error "TODO: Coercion case of prExpr."
 
