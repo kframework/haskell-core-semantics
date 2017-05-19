@@ -29,6 +29,8 @@ import           TyCoRep               (Coercion (..), KindCoercion (..),
 import qualified Unique                as U
 import           Var                   (Var, isId, isTyVar, varName, varType)
 
+todo = error "TODO"
+
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
@@ -50,6 +52,23 @@ prList t = foldr (\s -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Emp
 
 prName :: Name -> String
 prName n = OP.showSDocUnsafe (OP.ppr n)
+
+prAlt :: Alt Var -> String
+prAlt (ac, bs, e) =
+  let
+    acs = prAltCon ac
+    bss = prList "Var" $ prVar <$> bs
+    es  = prExpr e
+  in
+    "alt" ++ args [acs, bss, es]
+
+prDataCon :: DataCon -> String
+prDataCon dc = "dataCon" ++ args [prName $ getName dc]
+
+prAltCon :: AltCon -> String
+prAltCon (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
+prAltCon (LitAlt lit) = "litAlt" ++ args [prLit lit]
+prAltCon DEFAULT = "defaultAlt()"
 
 prTyCon :: TyCon -> String
 prTyCon tc
