@@ -10,13 +10,14 @@ import           Control.Monad         ((<=<))
 import           CoreSyn
 import           Data.ByteString.Char8 (unpack)
 import           Data.List             (intercalate)
+import           Data.Semigroup        ((<>))
 import           FastString            (unpackFS)
 import           GHC
 import           GHC.Paths             (libdir)
 import           HscTypes              (mg_binds)
 import           Literal
+import           Options.Applicative
 import qualified Outputable            as OP
-import           System.Environment
 import           TyCon                 (isAlgTyCon, isPromotedDataCon,
                                         isPromotedDataCon_maybe, isTupleTyCon,
                                         tyConKind, tyConName)
@@ -30,6 +31,8 @@ import           Var                   (Var, isId, isTyVar, varType)
 errorTODO :: a
 errorTODO = error "TODO"
 
+type WhetherToShowType = Bool
+
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
@@ -40,10 +43,10 @@ prVar e =
     outVar = show . U.getUnique
   in
     if isTyVar e
-    then "tyVar" ++ args [prType (varType e), outVar e]
+    then "tyVar" ++ args [prType True (varType e), outVar e]
     else
       if isId e
-      then "tmVar" ++ args [prType (varType e), outVar e]
+      then "tmVar" ++ args [prType True (varType e), outVar e]
       else error "This case should not happen."
 
 prList :: String -> [String] -> String
@@ -78,11 +81,11 @@ prTyCon tc
   | isFunTyCon tc =
       "arrTyCon()"
   | isTypeSynonymTyCon tc =
-      "synTyCon" ++ args [prType $ tyConKind tc]
+      "synTyCon" ++ args [prType True $ tyConKind tc]
   | isTupleTyCon tc =
-      "tupleTyCon()" ++ args [prType $ tyConKind tc]
+      "tupleTyCon()" ++ args [prType True $ tyConKind tc]
   | isAlgTyCon tc =
-      let as = [prName (tyConName tc), prType $ tyConKind tc] in
+      let as = [prName (tyConName tc), prType True $ tyConKind tc] in
       "algTyCon" ++ args as
   | isPrimTyCon tc = "primTyCon" ++ args [prPrimTyCon tc]
   | isPromotedDataCon tc =
@@ -101,8 +104,8 @@ prCoAxBranch cab =
   let
     tvs     = prList "tyVar" $ prVar <$> cab_tvs cab
     roles   = prList "role" $ prRole <$> cab_roles cab
-    lhs_str = args $ prType <$> cab_lhs cab
-    rhs_str = prType $ cab_rhs cab
+    lhs_str = args $ prType True <$> cab_lhs cab
+    rhs_str = prType True $ cab_rhs cab
   in
     "coAxBranch" ++ args [tvs, roles, lhs_str, rhs_str]
 
@@ -120,15 +123,15 @@ prProvenance :: UnivCoProvenance -> String
 prProvenance UnsafeCoerceProv   = "unsafeProv"
 prProvenance (PhantomProv _)    = "phantProv"
 prProvenance (ProofIrrelProv _) = "proofIrrelProv"
-prProvenance (PluginProv _) = "pluginProv"
-prProvenance (HoleProv _) = "holeProv"
+prProvenance (PluginProv _)     = "pluginProv"
+prProvenance (HoleProv _)       = "holeProv"
 
 -- TODO: Make sure that this is what we want.
 prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
 prCoercion :: Coercion -> String
-prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType ty]
+prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType True ty]
 prCoercion (TyConAppCo role tc cs) =
   let
     csArg = prList "coercion" (prCoercion <$> cs)
@@ -145,7 +148,7 @@ prCoercion (AxiomInstCo cab bi cs) =
   in
     "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
 prCoercion (UnivCo prov r ty1 ty2)  =
-  "univCo" ++ args [prProvenance prov, prType ty1, prType ty2, prRole r]
+  "univCo" ++ args [prProvenance prov, prType True ty1, prType True ty2, prRole r]
 prCoercion (SymCo co) =
   "symCo" ++ args [prCoercion co]
 prCoercion (TransCo co1 co2) =
@@ -173,20 +176,21 @@ prVisibilityFlag Visible   = "visible"
 prVisibilityFlag Specified = "specified"
 prVisibilityFlag Invisible = "invisible"
 
-prType :: Type -> String
-prType (TyVarTy x) = prVar x
-prType (AppTy ty1 ty2)  =
-  "appTy" ++ args [prType ty1, prType ty2]
-prType (TyConApp tc kt) =
-  "tyConApp" ++ args (prTyCon tc : (prType <$> kt))
-prType (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType ty]
-prType (ForAllTy (Anon ty1) ty2) =
-  "arr" ++ args [prType ty1, prType ty2]
-prType (LitTy tyl) = prTyLit tyl
-prType (CastTy ty kindco) =
-  "castTy" ++ args [prType ty, prCoercion kindco]
-prType (CoercionTy co) =
+prType :: WhetherToShowType -> Type -> String
+prType False _ = "[omitted]"
+prType True (TyVarTy x) = prVar x
+prType True (AppTy ty1 ty2) =
+  "appTy" ++ args [prType True ty1 , prType True ty2]
+prType True (TyConApp tc kt) =
+  "tyConApp" ++ args (prTyCon tc : (prType True <$> kt))
+prType True (ForAllTy (Named tyvar vf) ty) =
+  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType True ty]
+prType True (ForAllTy (Anon ty1) ty2) =
+  "arr" ++ args [prType True ty1, prType True ty2]
+prType True (LitTy tyl) = prTyLit tyl
+prType True (CastTy ty kindco) =
+  "castTy" ++ args [prType True ty, prCoercion kindco]
+prType True (CoercionTy co) =
   "coercionTy" ++ args [prCoercion co]
 
 -- TODO: Get this into KORE format.
@@ -210,7 +214,7 @@ prLit (MachLabel fs Nothing IsFunction) =
   "machLabelFunNone" ++ args [unpackFS fs]
 prLit (MachLabel fs Nothing IsData) =
   "machLabelDataNone" ++ args [unpackFS fs]
-prLit (LitInteger n ty) = "litInt" ++ args [show n, prType ty]
+prLit (LitInteger n ty) = "litInt" ++ args [show n, prType True ty]
 
 prTyLit :: TyLit -> String
 prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
@@ -233,11 +237,11 @@ prExpr (Case e b ty alts)  =
   let
     altsStr = prList "alt" $ prAlt <$> alts
   in
-    "case" ++ args [prExpr e, prVar b, prType ty, altsStr]
+    "case" ++ args [prExpr e, prVar b, prType True ty, altsStr]
 prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
 -- TODO: Figure out what to do with `Tickish`.
 prExpr (Tick _ _) = errorTODO
-prExpr (Type ty) = prType ty
+prExpr (Type ty) = prType True ty
 prExpr (Coercion co) = "coerce" ++ args [prCoercion co]
 
 compileToCore :: String -> IO [CoreBind]
@@ -249,9 +253,24 @@ compileToCore modName = runGhc (Just libdir) $ do
     ds <- desugarModule <=< typecheckModule <=< parseModule <=< getModSummary $ mkModuleName modName
     return $ mg_binds . coreModule $ ds
 
-main :: IO ()
-main = do
-  clArgs <- getArgs
-  c <- compileToCore (head clArgs)
+data Args = Args
+  { moduleName :: String
+  , noTypes :: Bool }
+
+argParse :: Parser Args
+argParse = Args
+        <$> argument str (metavar "MODULE")
+        <*> switch (long "no-types" <> help "Omit type information")
+
+getCLArgs :: Args -> IO ()
+getCLArgs (Args mn _) = do
+  c <- compileToCore mn
   let putNewLn s = putStrLn (s ++ "\n")
   mapM_ (putNewLn . prBinding) c
+
+main :: IO ()
+main = do
+  let pdStr  = "Compile Haskell to KORE representation of GHC Core"
+  let hdrStr = "compile-to-core - Compile Haskell to GHC Core"
+  let opts = info (argParse <**> helper) (fullDesc <> progDesc pdStr <> header hdrStr)
+  getCLArgs =<< execParser opts
