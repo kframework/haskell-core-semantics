@@ -140,7 +140,7 @@ prCoercion (TyConAppCo role tc cs) =
     "tyConAppCo" ++ args (prRole role : prTyCon tc : [csArg])
 prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
--- TODO: Complete.
+-- TODO: Make sure that this is what we want for the `CoVarCo` case.
 prCoercion (CoVarCo x) = "coVarCo" ++ args [prVar x]
 prCoercion (AxiomInstCo cab bi cs) =
   let
