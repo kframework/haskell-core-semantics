@@ -40,18 +40,14 @@ data Flags = Flags
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
+prCoreBndr :: CoreBndr -> String
+prCoreBndr cb = "coreBndr" ++ args [show $ U.getUnique cb]
+
 prVar :: Flags -> Var -> String
-prVar flg e =
-  let
-    outVar :: CoreBndr -> String
-    outVar = show . U.getUnique
-  in
-    if isTyVar e
-    then "tyVar" ++ args [prType flg (varType e), outVar e]
-    else
-      if isId e
-      then "tmVar" ++ args [prType flg (varType e), outVar e]
-      else error "This case should not happen."
+prVar flg e
+  | isTyVar e = "tyVar" ++ args [prType flg (varType e), prCoreBndr e]
+  | isId e    = "tmVar" ++ args [prType flg (varType e), prCoreBndr e]
+  | otherwise = error "this case should not happen."
 
 prList :: String -> [String] -> String
 prList t =
@@ -231,8 +227,8 @@ prBinding :: Flags -> Bind CoreBndr -> String
 prBinding flg (NonRec b e) = "nonRec" ++ args [prVar flg b, prExpr flg e]
 prBinding flg (Rec bs) =
   let prBinding' [] = "emptyBind"
-      prBinding' ((b, e):bs') = "bind" ++ args [prVar flg b, prExpr flg e] ++ prBinding' bs'
-  in "Rec" ++ args [prBinding' bs]
+      prBinding' ((b, e):bs') = "bind" ++ args [prVar flg b, prExpr flg e, prBinding' bs']
+  in "rec" ++ args [prBinding' bs]
 
 prTickish :: Tickish Id -> String
 -- TODO: Figure out what these `Tickish` constructors are about.
@@ -246,7 +242,7 @@ prExpr flg (Var x) = prVar flg x
 prExpr flg (Lit a) = prLit flg a
 prExpr flg (App e1 e2) = "app" ++ args (prExpr flg <$> [e1, e2])
 -- TODO: Figure out how to print `CoreBndr`
-prExpr flg (Lam x e) = "lam" ++ args [show (U.getUnique x), prExpr flg e]
+prExpr flg (Lam x e) = "lam" ++ args [prCoreBndr x, prExpr flg e]
 prExpr flg (Let b e) = "let" ++ args [prBinding flg b, prExpr flg e]
 prExpr flg (Case e b ty alts)  =
   let altsStr = prList "alt" $ prAlt flg <$> alts
