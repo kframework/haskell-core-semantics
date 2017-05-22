@@ -255,18 +255,28 @@ compileToCore modName = runGhc (Just libdir) $ do
 
 data Args = Args
   { moduleName :: String
-  , noTypes :: Bool }
+  , noTypes :: Bool
+  , outFile :: Maybe String}
 
 argParse :: Parser Args
 argParse = Args
         <$> argument str (metavar "MODULE")
         <*> switch (long "no-types" <> help "Omit type information")
+        <*> optional (strOption
+              (  long "output-file"
+              <> short 'o'
+              <> help "File to dump output in"
+              <> metavar "OUTFILE"))
 
 getCLArgs :: Args -> IO ()
-getCLArgs (Args mn _) = do
+getCLArgs (Args mn _ (Just fname)) = do
   c <- compileToCore mn
-  let putNewLn s = putStrLn (s ++ "\n")
-  mapM_ (putNewLn . prBinding) c
+  let output = intercalate "\n\n" (prBinding <$> c)
+  writeFile fname output
+getCLArgs (Args mn _ Nothing) = do
+  c <- compileToCore mn
+  let output = intercalate "\n\n" (prBinding <$> c)
+  putStrLn output
 
 main :: IO ()
 main = do
