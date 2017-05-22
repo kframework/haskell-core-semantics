@@ -141,7 +141,7 @@ prCoercion (TyConAppCo role tc cs) =
 prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
 -- TODO: Complete.
-prCoercion (CoVarCo _) = errorTODO
+prCoercion (CoVarCo x) = "coVarCo" ++ args [prVar x]
 prCoercion (AxiomInstCo cab bi cs) =
   let
     csArgs = prList "coercion" $ prCoercion <$> cs
