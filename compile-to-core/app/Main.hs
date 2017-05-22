@@ -271,6 +271,6 @@ getCLArgs (Args mn _) = do
 main :: IO ()
 main = do
   let pdStr  = "Compile Haskell to KORE representation of GHC Core"
-  let hdrStr = "compile-to-core - Compile Haskell to GHC Core"
+  let hdrStr = "compile-to-core - Compile GHC Core to KORE"
   let opts = info (argParse <**> helper) (fullDesc <> progDesc pdStr <> header hdrStr)
   getCLArgs =<< execParser opts
