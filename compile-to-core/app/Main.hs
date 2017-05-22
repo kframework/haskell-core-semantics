@@ -31,10 +31,11 @@ import           Var                   (Var, isId, isTyVar, varType)
 errorTODO :: a
 errorTODO = error "TODO"
 
-type ShouldShowType = Bool
+type ShouldOmitTypes = Bool
 
-newtype Flags = Flags
-  { sst :: ShouldShowType }
+data Flags = Flags
+  { shouldOmitTypes :: ShouldOmitTypes
+  , shouldUseColor  :: Bool }
 
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
@@ -179,23 +180,24 @@ prVisibilityFlag Specified = "specified"
 prVisibilityFlag Invisible = "invisible"
 
 prType :: Flags -> Type -> String
-prType (Flags True)    _           =
-  "<type>"
-prType flg              (TyVarTy x) =
-  prVar flg x
-prType flg@(Flags False) (AppTy ty1 ty2) =
-  "appTy" ++ args [prType flg ty1 , prType flg ty2]
-prType flg@(Flags False) (TyConApp tc kt) =
-  "tyConApp" ++ args (prTyCon flg tc : (prType flg <$> kt))
-prType flg@(Flags False) (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [prVar flg tyvar, prVisibilityFlag vf, prType flg ty]
-prType flg@(Flags False) (ForAllTy (Anon ty1) ty2) =
-  "arr" ++ args [prType flg ty1, prType flg ty2]
-prType     (Flags False) (LitTy tyl) = prTyLit tyl
-prType flg@(Flags False) (CastTy ty kindco) =
-  "castTy" ++ args [prType flg ty, prCoercion flg kindco]
-prType flg@(Flags False) (CoercionTy co) =
-  "coercionTy" ++ args [prCoercion flg co]
+prType flg ty'
+  | shouldOmitTypes flg = "\x1b[31m<type>\x1b[0m"
+  | otherwise =
+      case ty' of
+        TyVarTy x -> prVar flg x
+        AppTy ty1 ty2 ->
+          "appTy" ++ args [prType flg ty1 , prType flg ty2]
+        TyConApp tc kt ->
+          "tyConApp" ++ args (prTyCon flg tc : (prType flg <$> kt))
+        ForAllTy (Named tyvar vf) ty ->
+          "forallTy" ++ args [prVar flg tyvar, prVisibilityFlag vf, prType flg ty]
+        ForAllTy (Anon ty1) ty2 ->
+          "arr" ++ args [prType flg ty1, prType flg ty2]
+        LitTy tyl -> prTyLit tyl
+        CastTy ty kindco ->
+          "castTy" ++ args [prType flg ty, prCoercion flg kindco]
+        (CoercionTy co) ->
+          "coercionTy" ++ args [prCoercion flg co]
 
 -- TODO: Get this into KORE format.
 prLit :: Flags -> Literal -> String
@@ -263,13 +265,15 @@ compileToCore modName = runGhc (Just libdir) $ do
 
 data Args = Args
   { moduleName :: String
-  , noTypes :: Bool
-  , outFile :: Maybe String}
+  , noTypes    :: Bool
+  , colorful   :: Bool
+  , outFile    :: Maybe String }
 
 argParse :: Parser Args
 argParse = Args
         <$> argument str (metavar "MODULE")
         <*> switch (long "no-types" <> help "Omit type information")
+        <*> switch (long "color" <> short 'c' <> help "Enable colorful output")
         <*> optional (strOption
               (  long "output-file"
               <> short 'o'
@@ -277,8 +281,8 @@ argParse = Args
               <> metavar "OUTFILE"))
 
 runWithArgs :: Args -> IO ()
-runWithArgs (Args mn st mybfname) = do
-  let flg = Flags st
+runWithArgs (Args mn st clr mybfname) = do
+  let flg = Flags st clr
   c <- compileToCore mn
   let output = intercalate "\n\n" (prBinding flg <$> c)
   case mybfname of
