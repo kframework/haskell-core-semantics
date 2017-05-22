@@ -13,3 +13,8 @@ results in:
 nonRec(tmVar(tyConApp(algTyCon(Integer, tyConApp(primTyCon(TYPE), tyConApp(promDataCon(dataCon(PtrRepLifted)))))), rn8),
        litInt(1, tyConApp(algTyCon(Integer, tyConApp(primTyCon(TYPE), tyConApp(promDataCon(dataCon(PtrRepLifted))))))))
 ``````
+
+You can use the `--no-types` flag to omit the type information. For `one`, this results in the following:
+```haskell
+nonRec(tmVar(<type>, r1), litInt(1, <type>))
+```
