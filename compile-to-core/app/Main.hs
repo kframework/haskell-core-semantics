@@ -61,12 +61,10 @@ prName n = OP.showSDocUnsafe (OP.ppr n)
 
 prAlt :: Alt Var -> String
 prAlt (ac, bs, e) =
-  let
-    acs = prAltCon ac
-    bss = prList "Var" $ prVar <$> bs
-    es  = prExpr e
-  in
-    "alt" ++ args [acs, bss, es]
+  let acs = prAltCon ac
+      bss = prList "Var" $ prVar <$> bs
+      es  = prExpr e
+  in "alt" ++ args [acs, bss, es]
 
 prDataCon :: DataCon -> String
 prDataCon dc = "dataCon" ++ args [prName $ getName dc]
