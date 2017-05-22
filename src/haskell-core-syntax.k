@@ -1,23 +1,23 @@
 module HASKELL-CORE-SYNTAX
 
-  syntax Var  ::= "tmVar" "(" Type "," Id ")"
-                | "tyVar" "(" Type "," Id ")"
+  syntax Var         ::= "tmVar" "(" Type "," Id ")"
+                       | "tyVar" "(" Type "," Id ")"
 
-  syntax Lit      ::= "machChar"
-                    | "machStr"    "(" String ")"
-                    | "nullAddr"
-                    | "machInt"    "(" Int ")"
-                    | "machInt64"  "(" Int ")"
-                    | "machWord"   "(" Int ")"
-                    | "machWord64" "(" Int ")"
-                    | "machFloat"
-                    | "machDouble"
+  syntax Lit         ::= "machChar"
+                       | "machStr"    "(" String ")"
+                       | "nullAddr"
+                       | "machInt"    "(" Int ")"
+                       | "machInt64"  "(" Int ")"
+                       | "machWord"   "(" Int ")"
+                       | "machWord64" "(" Int ")"
+                       | "machFloat"
+                       | "machDouble"
 
-  syntax App      ::= "app" "(" Expr "," Expr ")"
+  syntax App         ::= "app" "(" Expr "," Expr ")"
 
-  syntax CoreBndr ::= "coreBndr" "(" Id ")"
+  syntax CoreBndr    ::= "coreBndr" "(" Id ")"
 
-  syntax Lam      ::= "lam" "(" CoreBndr "," Expr ")"
+  syntax Lam         ::= "lam" "(" CoreBndr "," Expr ")"
 
   syntax BindingList ::= "emptyBind"
                        | "bind" "(" Var "," Expr "," BindingList ")"
