@@ -39,17 +39,17 @@ newtype Flags = Flags
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
-prVar :: Var -> String
-prVar e =
+prVar :: Flags -> Var -> String
+prVar flg e =
   let
     outVar :: CoreBndr -> String
     outVar = show . U.getUnique
   in
     if isTyVar e
-    then "tyVar" ++ args [prType (Flags True) (varType e), outVar e]
+    then "tyVar" ++ args [prType flg (varType e), outVar e]
     else
       if isId e
-      then "tmVar" ++ args [prType (Flags True) (varType e), outVar e]
+      then "tmVar" ++ args [prType flg (varType e), outVar e]
       else error "This case should not happen."
 
 prList :: String -> [String] -> String
@@ -59,34 +59,34 @@ prList t =
 prName :: Name -> String
 prName n = OP.showSDocUnsafe (OP.ppr n)
 
-prAlt :: Alt Var -> String
-prAlt (ac, bs, e) =
-  let acs = prAltCon ac
-      bss = prList "Var" $ prVar <$> bs
-      es  = prExpr e
+prAlt :: Flags -> Alt Var -> String
+prAlt flg (ac, bs, e) =
+  let acs = prAltCon flg ac
+      bss = prList "Var" $ prVar flg <$> bs
+      es  = prExpr flg e
   in "alt" ++ args [acs, bss, es]
 
 prDataCon :: DataCon -> String
 prDataCon dc = "dataCon" ++ args [prName $ getName dc]
 
-prAltCon :: AltCon -> String
-prAltCon (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
-prAltCon (LitAlt lit) = "litAlt" ++ args [prLit lit]
-prAltCon DEFAULT      = "defaultAlt()"
+prAltCon :: Flags -> AltCon -> String
+prAltCon _   (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
+prAltCon flg (LitAlt lit) = "litAlt" ++ args [prLit flg lit]
+prAltCon _   DEFAULT      = "defaultAlt()"
 
 prPrimTyCon :: TyCon -> String
 prPrimTyCon tc = prName $ tyConName tc
 
-prTyCon :: TyCon -> String
-prTyCon tc
+prTyCon :: Flags -> TyCon -> String
+prTyCon flg tc
   | isFunTyCon tc =
       "arrTyCon()"
   | isTypeSynonymTyCon tc =
-      "synTyCon" ++ args [prType (Flags True) $ tyConKind tc]
+      "synTyCon" ++ args [prType flg $ tyConKind tc]
   | isTupleTyCon tc =
-      "tupleTyCon()" ++ args [prType (Flags True) $ tyConKind tc]
+      "tupleTyCon()" ++ args [prType flg $ tyConKind tc]
   | isAlgTyCon tc =
-      let as = [prName (tyConName tc), prType (Flags True) $ tyConKind tc] in
+      let as = [prName (tyConName tc), prType flg $ tyConKind tc] in
       "algTyCon" ++ args as
   | isPrimTyCon tc = "primTyCon" ++ args [prPrimTyCon tc]
   | isPromotedDataCon tc =
@@ -100,23 +100,23 @@ prRole Nominal          = "nom"
 prRole Representational = "repr"
 prRole Phantom          = "phant"
 
-prCoAxBranch :: CoAxBranch -> String
-prCoAxBranch cab =
+prCoAxBranch :: Flags -> CoAxBranch -> String
+prCoAxBranch flg cab =
   let
-    tvs     = prList "tyVar" $ prVar <$> cab_tvs cab
+    tvs     = prList "tyVar" $ prVar flg <$> cab_tvs cab
     roles   = prList "role" $ prRole <$> cab_roles cab
-    lhs_str = args $ prType (Flags True) <$> cab_lhs cab
-    rhs_str = prType (Flags True) $ cab_rhs cab
+    lhs_str = args $ prType flg <$> cab_lhs cab
+    rhs_str = prType flg $ cab_rhs cab
   in
     "coAxBranch" ++ args [tvs, roles, lhs_str, rhs_str]
 
-prCoAxiom :: CoAxiom Branched -> String
-prCoAxiom ca =
+prCoAxiom :: Flags -> CoAxiom Branched -> String
+prCoAxiom flg ca =
     let
-      t            = prTyCon $ co_ax_tc ca
+      t            = prTyCon flg $ co_ax_tc ca
       rho          = prRole $ co_ax_role ca
       branches     =  fromBranches (co_ax_branches ca)
-      axBranchList = prList "CoAxBranch" $ prCoAxBranch <$> branches
+      axBranchList = prList "CoAxBranch" $ prCoAxBranch flg <$> branches
     in
       "coAxiom" ++ args [t, rho, axBranchList]
 
@@ -131,47 +131,47 @@ prProvenance (HoleProv _)       = "holeProv"
 prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
-prCoercion :: Coercion -> String
-prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType (Flags True) ty]
-prCoercion (TyConAppCo role tc cs) =
-  let csArg = prList "coercion" (prCoercion <$> cs)
-  in "tyConAppCo" ++ args [prRole role, prTyCon tc, csArg]
-prCoercion (AppCo coe1 coe2) =
-  "appCo" ++ args (prCoercion <$> [coe1, coe2])
+prCoercion :: Flags -> Coercion -> String
+prCoercion flg (Refl r ty) = "refl" ++ args [prRole r, prType flg ty]
+prCoercion flg (TyConAppCo role tc cs) =
+  let csArg = prList "coercion" (prCoercion flg <$> cs)
+  in "tyConAppCo" ++ args [prRole role, prTyCon flg tc, csArg]
+prCoercion flg (AppCo coe1 coe2) =
+  "appCo" ++ args (prCoercion flg <$> [coe1, coe2])
 -- TODO: Make sure that this is what we want for the `CoVarCo` case.
-prCoercion (CoVarCo x) = "coVarCo" ++ args [prVar x]
-prCoercion (AxiomInstCo cab bi cs) =
-  let csArgs = prList "coercion" $ prCoercion <$> cs
+prCoercion flg (CoVarCo x) = "coVarCo" ++ args [prVar flg x]
+prCoercion flg (AxiomInstCo cab bi cs) =
+  let csArgs = prList "coercion" $ prCoercion flg <$> cs
       biArg  = "brIndex" ++ args [show bi]
-  in "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
-prCoercion (UnivCo prov r ty1 ty2)  =
+  in "axiomInstCo" ++ args [prCoAxiom flg cab, biArg, csArgs]
+prCoercion flg (UnivCo prov r ty1 ty2)  =
   let arg1 = prProvenance prov
-      arg2 = prType (Flags True) ty1
-      arg3 = prType (Flags True) ty2
+      arg2 = prType flg ty1
+      arg3 = prType flg ty2
       arg4 = prRole r
   in "univCo" ++ args [arg1, arg2, arg3, arg4]
-prCoercion (SymCo co) =
-  "symCo" ++ args [prCoercion co]
-prCoercion (TransCo co1 co2) =
-  "transCo" ++ args [prCoercion co1, prCoercion co2]
-prCoercion (AxiomRuleCo car cs) =
-  "axiomRuleCo" ++ args (prCoAxiomRule car : (prCoercion <$> cs))
-prCoercion (NthCo i co) =
-  "nthCo" ++ args [show i, prCoercion co]
-prCoercion (LRCo CLeft co) =
-  "leftProjCo" ++ args [prCoercion co]
-prCoercion (LRCo CRight co) =
-  "rightProjCo" ++ args [prCoercion co]
-prCoercion (InstCo co1 co2) =
-  "instCo" ++ args [prCoercion co1, prCoercion co2]
-prCoercion (CoherenceCo co kco) =
-  "coherenceCo" ++ args [prCoercion co, prCoercion kco]
-prCoercion (KindCo co) =
-  "kindCo" ++ args [prCoercion co]
-prCoercion (SubCo co) =
-  "subCo" ++ args [prCoercion co]
-prCoercion (ForAllCo tv kc c) =
-  "forAllCo" ++ args [prVar tv, prCoercion kc, prCoercion c]
+prCoercion flg (SymCo co) =
+  "symCo" ++ args [prCoercion flg co]
+prCoercion flg (TransCo co1 co2) =
+  "transCo" ++ args [prCoercion flg co1, prCoercion flg co2]
+prCoercion flg (AxiomRuleCo car cs) =
+  "axiomRuleCo" ++ args (prCoAxiomRule car : (prCoercion flg <$> cs))
+prCoercion flg (NthCo i co) =
+  "nthCo" ++ args [show i, prCoercion flg co]
+prCoercion flg (LRCo CLeft co) =
+  "leftProjCo" ++ args [prCoercion flg co]
+prCoercion flg (LRCo CRight co) =
+  "rightProjCo" ++ args [prCoercion flg co]
+prCoercion flg (InstCo co1 co2) =
+  "instCo" ++ args [prCoercion flg co1, prCoercion flg co2]
+prCoercion flg (CoherenceCo co kco) =
+  "coherenceCo" ++ args [prCoercion flg co, prCoercion flg kco]
+prCoercion flg (KindCo co) =
+  "kindCo" ++ args [prCoercion flg co]
+prCoercion flg (SubCo co) =
+  "subCo" ++ args [prCoercion flg co]
+prCoercion flg (ForAllCo tv kc c) =
+  "forAllCo" ++ args [prVar flg tv, prCoercion flg kc, prCoercion flg c]
 
 prVisibilityFlag :: VisibilityFlag -> String
 prVisibilityFlag Visible   = "visible"
@@ -179,54 +179,56 @@ prVisibilityFlag Specified = "specified"
 prVisibilityFlag Invisible = "invisible"
 
 prType :: Flags -> Type -> String
-prType     (Flags False) _ = "[omitted]"
-prType     (Flags True) (TyVarTy x) = prVar x
-prType flg@(Flags True) (AppTy ty1 ty2) =
+prType (Flags True)    _           =
+  "<type>"
+prType flg              (TyVarTy x) =
+  prVar flg x
+prType flg@(Flags False) (AppTy ty1 ty2) =
   "appTy" ++ args [prType flg ty1 , prType flg ty2]
-prType flg@(Flags True) (TyConApp tc kt) =
-  "tyConApp" ++ args (prTyCon tc : (prType flg <$> kt))
-prType flg@(Flags True) (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType flg ty]
-prType flg@(Flags True) (ForAllTy (Anon ty1) ty2) =
+prType flg@(Flags False) (TyConApp tc kt) =
+  "tyConApp" ++ args (prTyCon flg tc : (prType flg <$> kt))
+prType flg@(Flags False) (ForAllTy (Named tyvar vf) ty) =
+  "forallTy" ++ args [prVar flg tyvar, prVisibilityFlag vf, prType flg ty]
+prType flg@(Flags False) (ForAllTy (Anon ty1) ty2) =
   "arr" ++ args [prType flg ty1, prType flg ty2]
-prType     (Flags True) (LitTy tyl) = prTyLit tyl
-prType flg@(Flags True) (CastTy ty kindco) =
-  "castTy" ++ args [prType flg ty, prCoercion kindco]
-prType (Flags True) (CoercionTy co) =
-  "coercionTy" ++ args [prCoercion co]
+prType     (Flags False) (LitTy tyl) = prTyLit tyl
+prType flg@(Flags False) (CastTy ty kindco) =
+  "castTy" ++ args [prType flg ty, prCoercion flg kindco]
+prType flg@(Flags False) (CoercionTy co) =
+  "coercionTy" ++ args [prCoercion flg co]
 
 -- TODO: Get this into KORE format.
-prLit :: Literal -> String
-prLit (MachChar c) = "machChar" ++ args [[c]]
-prLit (MachStr bs) = "machStr" ++ args [unpack bs]
-prLit MachNullAddr = "nullAddr"
-prLit (MachInt n) = "machInt" ++ args [show n]
-prLit (MachInt64 n) = "machInt64" ++ args [show n]
-prLit (MachWord n) = "machWord" ++ args [show n]
-prLit (MachWord64 n) = "machWord64" ++ args [show n]
-prLit (MachFloat r) = "machFloat" ++ args [show r]
-prLit (MachDouble r) = "machDouble" ++ args [show r]
+prLit :: Flags -> Literal -> String
+prLit _   (MachChar c) = "machChar" ++ args [[c]]
+prLit _   (MachStr bs) = "machStr" ++ args [unpack bs]
+prLit _   MachNullAddr = "nullAddr"
+prLit _   (MachInt n) = "machInt" ++ args [show n]
+prLit _   (MachInt64 n) = "machInt64" ++ args [show n]
+prLit _   (MachWord n) = "machWord" ++ args [show n]
+prLit _   (MachWord64 n) = "machWord64" ++ args [show n]
+prLit _   (MachFloat r) = "machFloat" ++ args [show r]
+prLit _   (MachDouble r) = "machDouble" ++ args [show r]
 -- TODO: It might be nice to consider an alternative way of handling
 -- instead of having separate operators `Maybe Integer`.
-prLit (MachLabel fs (Just n) IsFunction) =
+prLit _   (MachLabel fs (Just n) IsFunction) =
   "machLabelFunSome" ++ args [unpackFS fs, show n]
-prLit (MachLabel fs (Just n) IsData) =
+prLit _   (MachLabel fs (Just n) IsData) =
   "machLabelDataSome" ++ args [unpackFS fs, show n]
-prLit (MachLabel fs Nothing IsFunction) =
+prLit _   (MachLabel fs Nothing IsFunction) =
   "machLabelFunNone" ++ args [unpackFS fs]
-prLit (MachLabel fs Nothing IsData) =
+prLit _   (MachLabel fs Nothing IsData) =
   "machLabelDataNone" ++ args [unpackFS fs]
-prLit (LitInteger n ty) = "litInt" ++ args [show n, prType (Flags True) ty]
+prLit flg (LitInteger n ty) = "litInt" ++ args [show n, prType flg ty]
 
 prTyLit :: TyLit -> String
 prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
 prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
 
-prBinding :: Bind CoreBndr -> String
-prBinding (NonRec b e) = "nonRec" ++ args [prVar b, prExpr e]
-prBinding (Rec bs) =
+prBinding :: Flags -> Bind CoreBndr -> String
+prBinding flg (NonRec b e) = "nonRec" ++ args [prVar flg b, prExpr flg e]
+prBinding flg (Rec bs) =
   let prBinding' [] = "emptyBind"
-      prBinding' ((b, e):bs') = "bind" ++ args [prVar b, prExpr e] ++ prBinding' bs'
+      prBinding' ((b, e):bs') = "bind" ++ args [prVar flg b, prExpr flg e] ++ prBinding' bs'
   in "Rec" ++ args [prBinding' bs]
 
 prTickish :: Tickish Id -> String
@@ -236,19 +238,19 @@ prTickish HpcTick     {} = "hpcTick"
 prTickish Breakpoint  {} = "breakpoint"
 prTickish SourceNote  {} = "sourceNote"
 
-prExpr :: CoreExpr -> String
-prExpr (Var x) = prVar x
-prExpr (Lit a) = prLit a
-prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
-prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
-prExpr (Let b e) = "let" ++ args [prBinding b, prExpr e]
-prExpr (Case e b ty alts)  =
-  let altsStr = prList "alt" $ prAlt <$> alts
-  in "case" ++ args [prExpr e, prVar b, prType (Flags True) ty, altsStr]
-prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
-prExpr (Tick tid e) = "tick" ++ args [prTickish tid, prExpr e]
-prExpr (Type ty) = prType (Flags True) ty
-prExpr (Coercion co) = "coerce" ++ args [prCoercion co]
+prExpr :: Flags -> CoreExpr -> String
+prExpr flg (Var x) = prVar flg x
+prExpr flg (Lit a) = prLit flg a
+prExpr flg (App e1 e2) = "app" ++ args (prExpr flg <$> [e1, e2])
+prExpr flg (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr flg e]
+prExpr flg (Let b e) = "let" ++ args [prBinding flg b, prExpr flg e]
+prExpr flg (Case e b ty alts)  =
+  let altsStr = prList "alt" $ prAlt flg <$> alts
+  in "case" ++ args [prExpr flg e, prVar flg b, prType flg ty, altsStr]
+prExpr flg (Cast e co) = "cast" ++ args [prExpr flg e, prCoercion flg co]
+prExpr flg (Tick tid e) = "tick" ++ args [prTickish tid, prExpr flg e]
+prExpr flg (Type ty) = "type" ++ args [prType flg ty]
+prExpr flg (Coercion co) = "coerce" ++ args [prCoercion flg co]
 
 compileToCore :: String -> IO [CoreBind]
 compileToCore modName = runGhc (Just libdir) $ do
@@ -275,14 +277,13 @@ argParse = Args
               <> metavar "OUTFILE"))
 
 runWithArgs :: Args -> IO ()
-runWithArgs (Args mn _ (Just fname)) = do
+runWithArgs (Args mn st mybfname) = do
+  let flg = Flags st
   c <- compileToCore mn
-  let output = intercalate "\n\n" (prBinding <$> c)
-  writeFile fname output
-runWithArgs (Args mn _ Nothing) = do
-  c <- compileToCore mn
-  let output = intercalate "\n\n" (prBinding <$> c)
-  putStrLn output
+  let output = intercalate "\n\n" (prBinding flg <$> c)
+  case mybfname of
+    Just fname -> writeFile fname output
+    Nothing    -> putStrLn output
 
 main :: IO ()
 main = do
