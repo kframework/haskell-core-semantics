@@ -227,6 +227,13 @@ prBinding (Rec bs) =
       prBinding' ((b, e):bs') = "bind" ++ args [prVar b, prExpr e] ++ prBinding' bs'
   in "Rec" ++ args [prBinding' bs]
 
+prTickish :: Tickish Id -> String
+-- TODO: Figure out what these `Tickish` constructors are about.
+prTickish ProfNote    {} = "profNote"
+prTickish HpcTick     {} = "hpcTick"
+prTickish Breakpoint  {} = "breakpoint"
+prTickish SourceNote  {} = "sourceNote"
+
 prExpr :: CoreExpr -> String
 prExpr (Var x) = prVar x
 prExpr (Lit a) = prLit a
@@ -239,8 +246,7 @@ prExpr (Case e b ty alts)  =
   in
     "case" ++ args [prExpr e, prVar b, prType True ty, altsStr]
 prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
--- TODO: Figure out what to do with `Tickish`.
-prExpr (Tick _ _) = errorTODO
+prExpr (Tick tid e) = "tick" ++ args [prTickish tid, prExpr e]
 prExpr (Type ty) = prType True ty
 prExpr (Coercion co) = "coerce" ++ args [prCoercion co]
 
