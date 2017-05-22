@@ -279,12 +279,12 @@ argParse = Args
               <> help "File to dump output in"
               <> metavar "OUTFILE"))
 
-getCLArgs :: Args -> IO ()
-getCLArgs (Args mn _ (Just fname)) = do
+runWithArgs :: Args -> IO ()
+runWithArgs (Args mn _ (Just fname)) = do
   c <- compileToCore mn
   let output = intercalate "\n\n" (prBinding <$> c)
   writeFile fname output
-getCLArgs (Args mn _ Nothing) = do
+runWithArgs (Args mn _ Nothing) = do
   c <- compileToCore mn
   let output = intercalate "\n\n" (prBinding <$> c)
   putStrLn output
@@ -294,4 +294,4 @@ main = do
   let pdStr  = "Compile Haskell to KORE representation of GHC Core"
   let hdrStr = "compile-to-core - Compile GHC Core to KORE"
   let opts = info (argParse <**> helper) (fullDesc <> progDesc pdStr <> header hdrStr)
-  getCLArgs =<< execParser opts
+  runWithArgs =<< execParser opts
