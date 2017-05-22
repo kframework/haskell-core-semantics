@@ -246,10 +246,8 @@ prExpr (App e1 e2) = "app" ++ args (prExpr <$> [e1, e2])
 prExpr (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr e]
 prExpr (Let b e) = "let" ++ args [prBinding b, prExpr e]
 prExpr (Case e b ty alts)  =
-  let
-    altsStr = prList "alt" $ prAlt <$> alts
-  in
-    "case" ++ args [prExpr e, prVar b, prType (Flags True) ty, altsStr]
+  let altsStr = prList "alt" $ prAlt <$> alts
+  in "case" ++ args [prExpr e, prVar b, prType (Flags True) ty, altsStr]
 prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
 prExpr (Tick tid e) = "tick" ++ args [prTickish tid, prExpr e]
 prExpr (Type ty) = prType (Flags True) ty
