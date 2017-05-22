@@ -31,7 +31,10 @@ import           Var                   (Var, isId, isTyVar, varType)
 errorTODO :: a
 errorTODO = error "TODO"
 
-type WhetherToShowType = Bool
+type ShouldShowType = Bool
+
+newtype Flags = Flags
+  { sst :: ShouldShowType }
 
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
@@ -43,10 +46,10 @@ prVar e =
     outVar = show . U.getUnique
   in
     if isTyVar e
-    then "tyVar" ++ args [prType True (varType e), outVar e]
+    then "tyVar" ++ args [prType (Flags True) (varType e), outVar e]
     else
       if isId e
-      then "tmVar" ++ args [prType True (varType e), outVar e]
+      then "tmVar" ++ args [prType (Flags True) (varType e), outVar e]
       else error "This case should not happen."
 
 prList :: String -> [String] -> String
@@ -81,11 +84,11 @@ prTyCon tc
   | isFunTyCon tc =
       "arrTyCon()"
   | isTypeSynonymTyCon tc =
-      "synTyCon" ++ args [prType True $ tyConKind tc]
+      "synTyCon" ++ args [prType (Flags True) $ tyConKind tc]
   | isTupleTyCon tc =
-      "tupleTyCon()" ++ args [prType True $ tyConKind tc]
+      "tupleTyCon()" ++ args [prType (Flags True) $ tyConKind tc]
   | isAlgTyCon tc =
-      let as = [prName (tyConName tc), prType True $ tyConKind tc] in
+      let as = [prName (tyConName tc), prType (Flags True) $ tyConKind tc] in
       "algTyCon" ++ args as
   | isPrimTyCon tc = "primTyCon" ++ args [prPrimTyCon tc]
   | isPromotedDataCon tc =
@@ -104,8 +107,8 @@ prCoAxBranch cab =
   let
     tvs     = prList "tyVar" $ prVar <$> cab_tvs cab
     roles   = prList "role" $ prRole <$> cab_roles cab
-    lhs_str = args $ prType True <$> cab_lhs cab
-    rhs_str = prType True $ cab_rhs cab
+    lhs_str = args $ prType (Flags True) <$> cab_lhs cab
+    rhs_str = prType (Flags True) $ cab_rhs cab
   in
     "coAxBranch" ++ args [tvs, roles, lhs_str, rhs_str]
 
@@ -131,7 +134,7 @@ prCoAxiomRule :: CoAxiomRule -> String
 prCoAxiomRule car = unpackFS $ coaxrName car
 
 prCoercion :: Coercion -> String
-prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType True ty]
+prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType (Flags True) ty]
 prCoercion (TyConAppCo role tc cs) =
   let
     csArg = prList "coercion" (prCoercion <$> cs)
@@ -148,7 +151,11 @@ prCoercion (AxiomInstCo cab bi cs) =
   in
     "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
 prCoercion (UnivCo prov r ty1 ty2)  =
-  "univCo" ++ args [prProvenance prov, prType True ty1, prType True ty2, prRole r]
+  let arg1 = prProvenance prov
+      arg2 = prType (Flags True) ty1
+      arg3 = prType (Flags True) ty2
+      arg4 = prRole r
+  in "univCo" ++ args [arg1, arg2, arg3, arg4]
 prCoercion (SymCo co) =
   "symCo" ++ args [prCoercion co]
 prCoercion (TransCo co1 co2) =
@@ -176,21 +183,21 @@ prVisibilityFlag Visible   = "visible"
 prVisibilityFlag Specified = "specified"
 prVisibilityFlag Invisible = "invisible"
 
-prType :: WhetherToShowType -> Type -> String
-prType False _ = "[omitted]"
-prType True (TyVarTy x) = prVar x
-prType True (AppTy ty1 ty2) =
-  "appTy" ++ args [prType True ty1 , prType True ty2]
-prType True (TyConApp tc kt) =
-  "tyConApp" ++ args (prTyCon tc : (prType True <$> kt))
-prType True (ForAllTy (Named tyvar vf) ty) =
-  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType True ty]
-prType True (ForAllTy (Anon ty1) ty2) =
-  "arr" ++ args [prType True ty1, prType True ty2]
-prType True (LitTy tyl) = prTyLit tyl
-prType True (CastTy ty kindco) =
-  "castTy" ++ args [prType True ty, prCoercion kindco]
-prType True (CoercionTy co) =
+prType :: Flags -> Type -> String
+prType     (Flags False) _ = "[omitted]"
+prType     (Flags True) (TyVarTy x) = prVar x
+prType flg@(Flags True) (AppTy ty1 ty2) =
+  "appTy" ++ args [prType flg ty1 , prType flg ty2]
+prType flg@(Flags True) (TyConApp tc kt) =
+  "tyConApp" ++ args (prTyCon tc : (prType flg <$> kt))
+prType flg@(Flags True) (ForAllTy (Named tyvar vf) ty) =
+  "forallTy" ++ args [prVar tyvar, prVisibilityFlag vf, prType flg ty]
+prType flg@(Flags True) (ForAllTy (Anon ty1) ty2) =
+  "arr" ++ args [prType flg ty1, prType flg ty2]
+prType     (Flags True) (LitTy tyl) = prTyLit tyl
+prType flg@(Flags True) (CastTy ty kindco) =
+  "castTy" ++ args [prType flg ty, prCoercion kindco]
+prType (Flags True) (CoercionTy co) =
   "coercionTy" ++ args [prCoercion co]
 
 -- TODO: Get this into KORE format.
@@ -214,7 +221,7 @@ prLit (MachLabel fs Nothing IsFunction) =
   "machLabelFunNone" ++ args [unpackFS fs]
 prLit (MachLabel fs Nothing IsData) =
   "machLabelDataNone" ++ args [unpackFS fs]
-prLit (LitInteger n ty) = "litInt" ++ args [show n, prType True ty]
+prLit (LitInteger n ty) = "litInt" ++ args [show n, prType (Flags True) ty]
 
 prTyLit :: TyLit -> String
 prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
@@ -244,10 +251,10 @@ prExpr (Case e b ty alts)  =
   let
     altsStr = prList "alt" $ prAlt <$> alts
   in
-    "case" ++ args [prExpr e, prVar b, prType True ty, altsStr]
+    "case" ++ args [prExpr e, prVar b, prType (Flags True) ty, altsStr]
 prExpr (Cast e co) = "cast" ++ args [prExpr e, prCoercion co]
 prExpr (Tick tid e) = "tick" ++ args [prTickish tid, prExpr e]
-prExpr (Type ty) = prType True ty
+prExpr (Type ty) = prType (Flags True) ty
 prExpr (Coercion co) = "coerce" ++ args [prCoercion co]
 
 compileToCore :: String -> IO [CoreBind]
