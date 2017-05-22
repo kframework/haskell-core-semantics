@@ -236,10 +236,10 @@ prBinding flg (Rec bs) =
 
 prTickish :: Tickish Id -> String
 -- TODO: Figure out what these `Tickish` constructors are about.
-prTickish ProfNote    {} = "profNote"
-prTickish HpcTick     {} = "hpcTick"
-prTickish Breakpoint  {} = "breakpoint"
-prTickish SourceNote  {} = "sourceNote"
+prTickish ProfNote    {} = "profNote()"
+prTickish HpcTick     {} = "hpcTick()"
+prTickish Breakpoint  {} = "breakpoint()"
+prTickish SourceNote  {} = "sourceNote()"
 
 prExpr :: Flags -> CoreExpr -> String
 prExpr flg (Var x) = prVar flg x
