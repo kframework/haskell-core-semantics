@@ -197,7 +197,7 @@ prType flg ty'
         LitTy tyl -> prTyLit tyl
         CastTy ty kindco ->
           "castTy" ++ args [prType flg ty, prCoercion flg kindco]
-        (CoercionTy co) ->
+        CoercionTy co ->
           "coercionTy" ++ args [prCoercion flg co]
 
 -- TODO: Get this into KORE format.
