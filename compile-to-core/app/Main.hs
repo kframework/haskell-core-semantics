@@ -170,7 +170,8 @@ prCoercion (KindCo co) =
   "kindCo" ++ args [prCoercion co]
 prCoercion (SubCo co) =
   "subCo" ++ args [prCoercion co]
-prCoercion ForAllCo{} = errorTODO
+prCoercion (ForAllCo tv kc c) =
+  "forAllCo" ++ args [prVar tv, prCoercion kc, prCoercion c]
 
 prVisibilityFlag :: VisibilityFlag -> String
 prVisibilityFlag Visible   = "visible"
