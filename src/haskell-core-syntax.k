@@ -27,13 +27,29 @@ module HASKELL-CORE-SYNTAX
 
   syntax Let      ::= "let" "(" Binding "," Expr ")"
 
-  syntax Alt      ::= "TODO"
+  syntax VarList  ::= "VarEmpty"
+                    | "VarCons" "(" VarList ")"
+
+  syntax Name     ::= String
+
+  syntax DataCon  ::= "dataCon" "(" Name ")"
+
+  syntax AltCon   ::= "dataAlt" "(" DataCon ")"
+                    | "litAlt" "(" Lit ")"
+                    | "defaultAlt" "(" ")"
+
+  syntax Alt      ::= "alt" "(" AltCon "," VarList "," Expr ")"
 
   syntax Case     ::= "case" "(" Expr "," Var "," Type "," Alt ")"
 
-  syntax Cast     ::= "TODO"
+  syntax Cast     ::= "cast" "(" Expr "," Coercion ")"
 
-  syntax Tick     ::= "TODO"
+  syntax Tickish  ::= "profNote"    "(" ")"
+                    | "hpcTick"     "(" ")"
+                    | "breakpoint"  "(" ")"
+                    | "sourceNote"  "(" ")"
+
+  syntax Tick     ::= "tick" "(" Tickish "," Expr ")"
 
   syntax Type     ::= "<type>"
 
