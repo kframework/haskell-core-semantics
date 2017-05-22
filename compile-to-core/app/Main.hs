@@ -134,20 +134,16 @@ prCoAxiomRule car = unpackFS $ coaxrName car
 prCoercion :: Coercion -> String
 prCoercion (Refl r ty) = "refl" ++ args [prRole r, prType (Flags True) ty]
 prCoercion (TyConAppCo role tc cs) =
-  let
-    csArg = prList "coercion" (prCoercion <$> cs)
-  in
-    "tyConAppCo" ++ args (prRole role : prTyCon tc : [csArg])
+  let csArg = prList "coercion" (prCoercion <$> cs)
+  in "tyConAppCo" ++ args (prRole role : prTyCon tc : [csArg])
 prCoercion (AppCo coe1 coe2) =
   "appCo" ++ args (prCoercion <$> [coe1, coe2])
 -- TODO: Make sure that this is what we want for the `CoVarCo` case.
 prCoercion (CoVarCo x) = "coVarCo" ++ args [prVar x]
 prCoercion (AxiomInstCo cab bi cs) =
-  let
-    csArgs = prList "coercion" $ prCoercion <$> cs
-    biArg = "brIndex" ++ args [show bi]
-  in
-    "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
+  let csArgs = prList "coercion" $ prCoercion <$> cs
+      biArg  = "brIndex" ++ args [show bi]
+  in "axiomInstCo" ++ args [prCoAxiom cab, biArg, csArgs]
 prCoercion (UnivCo prov r ty1 ty2)  =
   let arg1 = prProvenance prov
       arg2 = prType (Flags True) ty1
