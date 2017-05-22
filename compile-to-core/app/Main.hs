@@ -245,7 +245,8 @@ prExpr :: Flags -> CoreExpr -> String
 prExpr flg (Var x) = prVar flg x
 prExpr flg (Lit a) = prLit flg a
 prExpr flg (App e1 e2) = "app" ++ args (prExpr flg <$> [e1, e2])
-prExpr flg (Lam x e) = "lam" ++ args [show (U.getUnique x) ++ "." ++ prExpr flg e]
+-- TODO: Figure out how to print `CoreBndr`
+prExpr flg (Lam x e) = "lam" ++ args [show (U.getUnique x), prExpr flg e]
 prExpr flg (Let b e) = "let" ++ args [prBinding flg b, prExpr flg e]
 prExpr flg (Case e b ty alts)  =
   let altsStr = prList "alt" $ prAlt flg <$> alts
