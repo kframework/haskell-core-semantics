@@ -1,1 +1,3 @@
 src/haskell-core-kompiled
+*.hi
+*.o
