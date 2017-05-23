@@ -39,7 +39,9 @@ module HASKELL-CORE-SYNTAX
                     | "defaultAlt" "(" ")"
 
   syntax Alt      ::= "alt" "(" AltCon "," VarList "," Expr ")"
-  syntax Alts     ::= List{Alt,";"}
+
+  syntax AltList  ::= "AltEmpty"
+                    | "AltCons" "(" Alt "," AltList ")"
 
   syntax Case     ::= "case" "(" Expr "," Var "," Type "," Alt ")"
 
