@@ -1,7 +1,6 @@
 mkdir -p core
-for i in `ls haskell`; do
-  ghc -ddump-ds -dsuppress-idinfo haskell/$i | tail -n +6 > core/$(basename $i .hs).hcr;
-  echo "- Writing core/$(basename $i .hs).hcr..."
+cd haskell
+for i in `ls *.hs`; do
+  to-core $(basename $i .hs) -o ../core/$(basename $i .hs).pkore;
+  echo "- Writing core/$(basename $i .hs).pkore..."
 done
-rm haskell/*.o
-rm haskell/*.hi
