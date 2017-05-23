@@ -50,8 +50,8 @@ prVar flg e
   | otherwise = error "this case should not happen."
 
 prList :: String -> [String] -> String
-prList t =
-  foldr (\_ -> (\x y -> x ++ "(" ++ y ++ ")") (t ++ "Cons")) (t ++ "Empty")
+prList t []     = t ++ "Empty"
+prList t (x:xs) = (t ++ "Cons") ++ args [x, prList t xs]
 
 prName :: Name -> String
 prName n = OP.showSDocUnsafe (OP.ppr n)
