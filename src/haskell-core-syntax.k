@@ -28,7 +28,7 @@ module HASKELL-CORE-SYNTAX
   syntax Let      ::= "let" "(" Binding "," Expr ")"
 
   syntax VarList  ::= "VarEmpty"
-                    | "VarCons" "(" VarList ")"
+                    | "VarCons" "(" Var "," VarList ")"
 
   syntax Name     ::= String
 
@@ -39,6 +39,7 @@ module HASKELL-CORE-SYNTAX
                     | "defaultAlt" "(" ")"
 
   syntax Alt      ::= "alt" "(" AltCon "," VarList "," Expr ")"
+  syntax Alts     ::= List{Alt,";"}
 
   syntax Case     ::= "case" "(" Expr "," Var "," Type "," Alt ")"
 
