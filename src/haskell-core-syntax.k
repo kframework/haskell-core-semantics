@@ -1,7 +1,7 @@
 module HASKELL-CORE-SYNTAX
 
-  syntax Var         ::= "tmVar" "(" Type "," Id ")"
-                       | "tyVar" "(" Type "," Id ")"
+  syntax Var         ::= "tmVar" "(" Type "," CoreBndr ")"
+                       | "tyVar" "(" Type "," CoreBndr ")"
 
   syntax Lit         ::= "machChar"         /* TODO: Native support for chars */
                        | "machStr"    "(" String ")"
@@ -13,11 +13,11 @@ module HASKELL-CORE-SYNTAX
                        | "machFloat"   /* TODO: Native support for rationals. */
                        | "machDouble"  /* TODO: Native support for rationals. */
 
-  syntax App         ::= "app" "(" Expr "," Expr ")"
+  syntax App         ::= Expr "," Expr
 
   syntax CoreBndr    ::= "coreBndr" "(" Id ")"
 
-  syntax Lam         ::= "lam" "(" CoreBndr "," Expr ")"
+  syntax Lam         ::= CoreBndr "," Expr
 
   syntax BindingList ::= "emptyBind"
                        | "bind" "(" Var "," Expr "," BindingList ")"
@@ -25,12 +25,12 @@ module HASKELL-CORE-SYNTAX
   syntax Binding  ::= "nonRec" "(" Var "," Expr ")"
                     | "rec" "(" BindingList ")"
 
-  syntax Let      ::= "let" "(" Binding "," Expr ")"
+  syntax Let      ::= Binding "," Expr
 
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
-  syntax Name     ::= String
+  syntax Name     ::= Id
 
   syntax DataCon  ::= "dataCon" "(" Name ")"
 
@@ -40,33 +40,38 @@ module HASKELL-CORE-SYNTAX
 
   syntax Alt      ::= "alt" "(" AltCon "," VarList "," Expr ")"
 
-  syntax AltList  ::= "AltEmpty"
-                    | "AltCons" "(" Alt "," AltList ")"
+  syntax AltList  ::= "altEmpty"
+                    | "altCons" "(" Alt "," AltList ")"
 
-  syntax Case     ::= "case" "(" Expr "," Var "," Type "," Alt ")"
+  syntax Case     ::= Expr "," Var "," Type "," AltList
 
-  syntax Cast     ::= "cast" "(" Expr "," Coercion ")"
+  syntax Cast     ::= Expr "," Coercion
 
   syntax Tickish  ::= "profNote"    "(" ")"
                     | "hpcTick"     "(" ")"
                     | "breakpoint"  "(" ")"
                     | "sourceNote"  "(" ")"
 
-  syntax Tick     ::= "tick" "(" Tickish "," Expr ")"
+  syntax Tick     ::= Tickish "," Expr
 
   /* TODO: type system will eventually be implemented. */
   syntax Type     ::= "<type>"
 
   syntax Coercion ::= "TODO"
 
-  syntax Expr     ::= Var
-                    | Lit
-                    | App
-                    | Lam
-                    | Let
-                    | Case
-                    | Cast
-                    | Tick
-                    | Type
+  syntax Expr     ::= "var"  "(" Var ")"
+                    | "lit"  "(" Lit ")"
+                    | "app"  "(" App ")"
+                    | "lam"  "(" Lam ")"
+                    | "let"  "(" Let ")"
+                    | "case" "(" Case ")"
+                    | "cast" "(" Cast ")"
+                    | "tick" "(" Tick ")"
+                    | "type" "(" Type ")"
                     | Coercion
+
+  syntax SeqBind  ::= Binding | Binding SeqBind
+
+  syntax Pgm       ::= SeqBind
+
 endmodule
