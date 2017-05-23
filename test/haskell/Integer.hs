@@ -1,4 +1,4 @@
-module Hello where
+module Integers where
 
 x :: Int
 x = 1
