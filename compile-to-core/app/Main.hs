@@ -41,7 +41,7 @@ args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
 prCoreBndr :: CoreBndr -> String
-prCoreBndr cb = "coreBndr" ++ args [show $ U.getUnique cb]
+prCoreBndr cb = "coreBndr" ++ args ["x" ++ show (U.getUnique cb)]
 
 prVar :: Flags -> Var -> String
 prVar flg e
@@ -199,7 +199,7 @@ prType flg ty'
 -- TODO: Get this into KORE format.
 prLit :: Flags -> Literal -> String
 prLit _   (MachChar c) = "machChar" ++ args [[c]]
-prLit _   (MachStr bs) = "machStr" ++ args [unpack bs]
+prLit _   (MachStr bs) = "machStr" ++ args ["\"" ++ unpack bs ++ "\""]
 prLit _   MachNullAddr = "nullAddr"
 prLit _   (MachInt n) = "machInt" ++ args [show n]
 prLit _   (MachInt64 n) = "machInt64" ++ args [show n]
@@ -238,8 +238,8 @@ prTickish Breakpoint  {} = "breakpoint()"
 prTickish SourceNote  {} = "sourceNote()"
 
 prExpr :: Flags -> CoreExpr -> String
-prExpr flg (Var x) = prVar flg x
-prExpr flg (Lit a) = prLit flg a
+prExpr flg (Var x) = "var" ++ args [prVar flg x]
+prExpr flg (Lit a) = "lit" ++ args [prLit flg a]
 prExpr flg (App e1 e2) = "app" ++ args (prExpr flg <$> [e1, e2])
 -- TODO: Figure out how to print `CoreBndr`
 prExpr flg (Lam x e) = "lam" ++ args [prCoreBndr x, prExpr flg e]
