@@ -17,7 +17,7 @@ module HASKELL-CORE-SYNTAX
                        | "machLabelDataSome" "(" String "," Int ")"
                        | "machLabelFunNone"  "(" String ")"
                        | "machLabelDataNone" "(" String ")"
-                       | "litInt" "(" Int "," Type ")"
+                       | "litInt"            "(" Int "," Type ")"
 
   syntax CoreBndr    ::= "coreBndr" "(" Id ")"
 
@@ -44,8 +44,6 @@ module HASKELL-CORE-SYNTAX
 
   syntax AltList  ::= "altEmpty"
                     | "altCons" "(" Alt "," AltList ")"
-
-  syntax Cast     ::= Expr "," Coercion
 
   syntax Tickish  ::= "profNote"    "(" ")"
                     | "hpcTick"     "(" ")"
