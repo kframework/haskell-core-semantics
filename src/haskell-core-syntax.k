@@ -55,12 +55,13 @@ module HASKELL-CORE-SYNTAX
 
   syntax Coercion ::= "TODO"
 
+  // TODO: the "lit" case here should be a KResult
   syntax Expr     ::= "var"  "(" Var ")"
                     | "lit"  "(" Lit ")"
                     | "app"  "(" Expr "," Expr ")"
                     | "lam"  "(" CoreBndr "," Expr ")"
                     | "let"  "(" Binding "," Expr ")"
-                    | "case" "(" Expr "," Var "," Type "," AltList ")"
+                    | "case" "(" Expr "," Var "," Type "," AltList ")" [strict(1)]
                     | "cast" "(" Expr "," Coercion ")"
                     | "tick" "(" Tickish "," Expr ")"
                     | "type" "(" Type ")"
