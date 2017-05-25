@@ -18,3 +18,44 @@ You can use the `--no-types` flag to omit the type information. For `one`, this 
 ```haskell
 nonRec(tmVar(<type>, r1), litInt(1, <type>))
 ```
+
+## The output format
+
+### Bindings
+
+Every Core program is a list of bindings (of type `Bind CoreBndr`). Every
+binding is either recursive or not. There are two operators that construct
+an AST of sort **Binding**: `rec` and `nonRec`.
+```
+  nonRec : CoreBndr ⟶ Expr ⟶ Binding
+  rec    : BindingList ⟶ Binding
+```
+
+### `Binding` (`Bind CoreBndr` in GHC Core)
+
+### `BindingList`
+
+### `Expr` (`CoreExpr` in GHC Core)
+
+There are 10 constructors for the sort `Expr`.
+
+```
+  var    : Id ⟶ Expr
+  lit    : Literal ⟶ Expr
+  app    : Expr Expr ⟶ Expr
+  lam    : Binding Expr ⟶ Expr
+  let    : Binding Expr ⟶ Expr
+  case   : Expr Binding Type AltList ⟶ Expr
+  cast   : Expr Coercion ⟶ Expr
+  tick   : Tickish Expr ⟶ Expr
+  type   : Type ⟶ Expr
+  coerce : Coercion ⟶ Expr
+```
+
+### `Id`
+
+### `Literal`
+
+### `Var`
+
+### `Type`
