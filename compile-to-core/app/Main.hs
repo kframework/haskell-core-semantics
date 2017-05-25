@@ -226,9 +226,11 @@ prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
 prBinding :: Flags -> Bind CoreBndr -> String
 prBinding flg (NonRec b e) = "nonRec" ++ args [prVar flg b, prExpr flg e]
 prBinding flg (Rec bs) =
-  let prBinding' [] = "emptyBind"
-      prBinding' ((b, e):bs') = "bind" ++ args [prVar flg b, prExpr flg e, prBinding' bs']
-  in "rec" ++ args [prBinding' bs]
+  let prBindingList [] = "emptyBind"
+      prBindingList ((b, e):bs') =
+        let arglist = [prVar flg b, prExpr flg e, prBindingList bs']
+        in "bind" ++ args arglist
+  in "rec" ++ args [prBindingList bs]
 
 prTickish :: Tickish Id -> String
 -- TODO: Figure out what these `Tickish` constructors are about.
