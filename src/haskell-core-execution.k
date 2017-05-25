@@ -12,14 +12,16 @@ module HASKELL-CORE-EXECUTION
 
   // Contents of the store
   syntax Object   ::= data(DataCon, Locs)
-                    | abs(CoreBndr, Expr, Map) // closure
+                    | abs(Var, Expr, Map) // closure
                     | thunk(Expr, Map)
 
   // Store addresses are expressions in WHNF
   syntax KResult  ::= val(Loc)
   syntax Expr     ::= KResult
-  // doBind: binds Id to Expr (while evaluatin K) without forcing evaluation of Expr
-  syntax K        ::= doBind(Id, Expr, K) 
+
+  // doBind: binds Id to Expr (for evaluation in K) without forcing
+  // the evaluation of Expr.
+  syntax K        ::= doBind(Id, Expr, K)
                     | bindVals(Ids, Locs, K)
                     | restoreEnv(Map) // environment to reinstate
 
@@ -28,7 +30,7 @@ module HASKELL-CORE-EXECUTION
 
   // Get Ids out of VarList
   rule getTmVars(VarEmpty)                             => .Ids
-  rule getTmVars(VarCons(tmVar(_, coreBndr(I)), Vars)) => I; getTmVars(Vars)
+  rule getTmVars(VarCons(tmVar(_, name(I)), Vars)) => I; getTmVars(Vars)
   rule getTmVars(VarCons(tyVar(_, _), Vars))           => getTmVars(Vars)
 
   // NB: Some rules in core_spec.pdf are accounted for due to strictness of the
@@ -42,18 +44,18 @@ module HASKELL-CORE-EXECUTION
 
   // TODO: check if type application
   // S_Beta: not evaluated immediately due to laziness
-  rule app(lam(coreBndr(R), E1), E2) => doBind(R, E2, E1)
+  rule app(lam(tmVar(_, name(R)), E1), E2) => doBind(R, E2, E1)
 
   rule cast(E, _) => E
 
   // S_MatchDefault
-  rule case(val(V), tmVar(_, coreBndr(R)), _, altCons(alt(defaultAlt(), _, E), _))
+  rule case(val(V), tmVar(_, name(R)), _, altCons(alt(defaultAlt(), _, E), _))
          => doBind(R, val(V), E)
-  
+
   // S_MatchData (first Alt matches)
   rule
     <k>
-      case(val(V), tmVar(_, coreBndr(R)), _, altCons(alt(dataAlt(C), Vars, E), _))
+      case(val(V), tmVar(_, name(R)), _, altCons(alt(dataAlt(C), Vars, E), _))
         => doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E))
       ...
     </k>
@@ -70,7 +72,7 @@ module HASKELL-CORE-EXECUTION
     requires C1 =/=K C2
 
   // S_MatchLit (first Alt matches)
-  rule case(lit(L), tmVar(_, coreBndr(R)), _, altCons(alt(litAlt(L), _, E), _))
+  rule case(lit(L), tmVar(_, name(R)), _, altCons(alt(litAlt(L), _, E), _))
          => doBind(R, lit(L), E)
 
   // S_MatchLit (first Alt doesn't match)
@@ -83,7 +85,7 @@ module HASKELL-CORE-EXECUTION
   syntax K       ::= bindRec(BindingList, LocDefs, Expr)
 
   // S_LetNonRec
-  rule let(nonRec(tmVar(_, coreBndr(V)), E2), E1) => doBind(V, E2, E1)
+  rule let(nonRec(tmVar(_, name(V)), E2), E1) => doBind(V, E2, E1)
 
   rule
     <k> doBind(V, val(L), Body) => Body ~> restoreEnv(Env) ... </k>

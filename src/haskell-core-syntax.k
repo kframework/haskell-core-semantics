@@ -1,7 +1,7 @@
 module HASKELL-CORE-SYNTAX
 
-  syntax Var         ::= "tmVar" "(" Type "," CoreBndr ")"
-                       | "tyVar" "(" Type "," CoreBndr ")"
+  syntax Var         ::= "tmVar" "(" Type "," Name ")"
+                       | "tyVar" "(" Type "," Name ")"
 
   // TODO: Native support for chars and rationals (char, float, double)
   syntax Lit         ::= "machChar"
@@ -19,8 +19,6 @@ module HASKELL-CORE-SYNTAX
                        | "machLabelDataNone" "(" String ")"
                        | "litInt"            "(" Int "," Type ")"
 
-  syntax CoreBndr    ::= "coreBndr" "(" Id ")"
-
   syntax BindingList ::= "emptyBind"
                        | "bind" "(" Var "," Expr "," BindingList ")"
 
@@ -32,9 +30,9 @@ module HASKELL-CORE-SYNTAX
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
-  syntax Name     ::= Id
+  syntax Name     ::= "name" "(" Id ")"
 
-  syntax DataCon  ::= "dataCon" "(" Name ")"
+  syntax DataCon  ::= "dataCon" "(" Var ")"
 
   syntax AltCon   ::= "dataAlt" "(" DataCon ")"
                     | "litAlt" "(" Lit ")"
@@ -59,9 +57,10 @@ module HASKELL-CORE-SYNTAX
   syntax Expr     ::= "var"  "(" Var ")"
                     | "lit"  "(" Lit ")"
                     | "app"  "(" Expr "," Expr ")"
-                    | "lam"  "(" CoreBndr "," Expr ")"
+                    | "lam"  "(" Var "," Expr ")"
                     | "let"  "(" Binding "," Expr ")"
-                    | "case" "(" Expr "," Var "," Type "," AltList ")" [strict(1)]
+                    | "case" "(" Expr "," Var "," Type "," AltList ")"
+                      [strict(1)]
                     | "cast" "(" Expr "," Coercion ")"
                     | "tick" "(" Tickish "," Expr ")"
                     | "type" "(" Type ")"
