@@ -54,6 +54,10 @@ There are 10 constructors for the sort `Expr`.
 
 ### `Id`
 
+`Id` is just [a
+synonym](https://github.com/ghc/ghc/blob/master/compiler/basicTypes/Var.hs#L110)
+for `Var` in the GHC source.
+
 ### `Literal`
 
 ### `Var`
