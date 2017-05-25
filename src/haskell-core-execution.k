@@ -29,9 +29,9 @@ module HASKELL-CORE-EXECUTION
   syntax Ids      ::= getTmVars(VarList) [function]
 
   // Get Ids out of VarList
-  rule getTmVars(VarEmpty)                             => .Ids
+  rule getTmVars(VarEmpty)                         => .Ids
   rule getTmVars(VarCons(tmVar(_, name(I)), Vars)) => I; getTmVars(Vars)
-  rule getTmVars(VarCons(tyVar(_, _), Vars))           => getTmVars(Vars)
+  rule getTmVars(VarCons(tyVar(_, _), Vars))       => getTmVars(Vars)
 
   // NB: Some rules in core_spec.pdf are accounted for due to strictness of the
   // literal case, i.e. S_Case, S_Tick, S_App, etc.

@@ -30,9 +30,13 @@ module HASKELL-CORE-SYNTAX
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
+  syntax Id       ::= "$" Id
+                    | Id "#"
+                    | "[]" | ":" | "/="
+
   syntax Name     ::= "name" "(" Id ")"
 
-  syntax DataCon  ::= "dataCon" "(" Var ")"
+  syntax DataCon  ::= "dataCon" "(" Name ")"
 
   syntax AltCon   ::= "dataAlt" "(" DataCon ")"
                     | "litAlt" "(" Lit ")"
