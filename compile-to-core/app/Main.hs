@@ -25,8 +25,7 @@ import           TyCoRep               (Coercion (..), LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
                                         UnivCoProvenance (..),
                                         VisibilityFlag (..))
-import qualified Unique                as U
-import           Var                   (Var, isId, isTyVar, varType)
+import           Var                   (Var, isId, isTyVar, varType, varName)
 
 errorTODO :: a
 errorTODO = error "TODO"
@@ -40,13 +39,10 @@ data Flags = Flags
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
 
-prCoreBndr :: CoreBndr -> String
-prCoreBndr cb = "coreBndr" ++ args ["x" ++ show (U.getUnique cb)]
-
 prVar :: Flags -> Var -> String
 prVar flg e
-  | isTyVar e = "tyVar" ++ args [prType flg (varType e), prCoreBndr e]
-  | isId e    = "tmVar" ++ args [prType flg (varType e), prCoreBndr e]
+  | isId e = "tmVar" ++ args [prType flg (varType e), prName $ varName e]
+  | isTyVar e = "tyVar" ++ args [prType flg (varType e), prName $ varName e]
   | otherwise = error "this case should not happen."
 
 prList :: String -> [String] -> String
@@ -54,7 +50,7 @@ prList t []     = t ++ "Empty"
 prList t (x:xs) = (t ++ "Cons") ++ args [x, prList t xs]
 
 prName :: Name -> String
-prName n = OP.showSDocUnsafe (OP.ppr n)
+prName n = "name" ++ args [OP.showSDocUnsafe (OP.ppr n)]
 
 prAlt :: Flags -> Alt Var -> String
 prAlt flg (ac, bs, e) =
@@ -244,7 +240,7 @@ prExpr flg (Var x) = "var" ++ args [prVar flg x]
 prExpr flg (Lit a) = "lit" ++ args [prLit flg a]
 prExpr flg (App e1 e2) = "app" ++ args (prExpr flg <$> [e1, e2])
 -- TODO: Figure out how to print `CoreBndr`
-prExpr flg (Lam x e) = "lam" ++ args [prCoreBndr x, prExpr flg e]
+prExpr flg (Lam x e) = "lam" ++ args [prVar flg x, prExpr flg e]
 prExpr flg (Let b e) = "let" ++ args [prBinding flg b, prExpr flg e]
 prExpr flg (Case e b ty alts)  =
   let altsStr = prList "alt" $ prAlt flg <$> alts
