@@ -95,4 +95,16 @@ There are 14 operators of sort `Literal`.
 
 ### `Type`
 
+### `Role`
+
+There are 3 constants of sort `Role`.
+
+```
+nom    : ⟶ Role
+repr   : ⟶ Role
+phant  : ⟶ Role
+```
+
+### `Coercion`
+
 __TODO__: Leaving this out for now as it is not a priority.
