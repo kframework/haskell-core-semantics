@@ -21,6 +21,17 @@ nonRec(tmVar(<type>, r1), litInt(1, <type>))
 
 ## The output format
 
+We give the list of operators with their
+arities in the style of sorted algebra. The only syntactic definition we have
+is for the case of an operator `f` of arity `S₁ ⋯ Sₙ ⟶ S` being applied to
+arguments `k₁, ..., kₙ` of sorts `S₁, ..., Sₙ` which is denoted:
+```
+f(k₁, ..., kₙ)
+```
+
+The syntactic forms of the constants (for example, the sort `Literal`) will
+be explained in their corresponding sections.
+
 ### Type synonyms
 
 Some of these type synonyms defined in the GHC source code can be confusing
