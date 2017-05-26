@@ -76,3 +76,5 @@ There are 14 operators of sort `Literal`.
 ### `Var`
 
 ### `Type`
+
+__TODO__: Leaving this out for now as it is not a priority.
