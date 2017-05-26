@@ -93,7 +93,25 @@ There are 14 operators of sort `Literal`.
 
 ### `Var`
 
+### `DataCon`
+
+### `AltCon`
+
+There are three operators of sort `AltCon`.
+
+```
+dataAlt    : DataCon ⟶ AltCon
+litAlt     : Literal ⟶ AltCon
+defaultAlt : ⟶ AltCon
+```
+
 ### `Type`
+
+__TODO__: Leaving this out for now as it is not a priority.
+
+### `UnivCoProvenance`
+
+__TODO__
 
 ### `Role`
 
@@ -107,4 +125,4 @@ phant  : ⟶ Role
 
 ### `Coercion`
 
-__TODO__: Leaving this out for now as it is not a priority.
+__TODO__
