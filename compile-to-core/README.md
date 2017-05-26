@@ -52,13 +52,26 @@ There are 10 constructors for the sort `Expr`.
   coerce : Coercion ⟶ Expr
 ```
 
-### `Id`
-
-`Id` is just [a
-synonym](https://github.com/ghc/ghc/blob/master/compiler/basicTypes/Var.hs#L110)
-for `Var` in the GHC source.
-
 ### `Literal`
+
+There are 14 operators of sort `Literal`.
+
+```
+  machChar           : Char ⟶ Literal
+  machStr            : ByteString ⟶ Literal
+  nullAddr           : ⟶ Literal
+  machInt            : Integer ⟶ Literal
+  machInt64          : Integer ⟶ Literal
+  machWord           : Integer ⟶ Literal
+  machWord64         : Integer ⟶ Literal
+  machFloat          : Rational ⟶ Literal
+  machDouble         : Rational ⟶ Literal
+  machLabelFunSome   : String Int ⟶ Literal
+  machLabelDataSome  : String Int ⟶ Literal
+  machLabelFunNone   : String ⟶ Literal
+  machLabelDataNone  : String ⟶ Literal
+  litInt             : Integer Type ⟶ Literal
+```
 
 ### `Var`
 
