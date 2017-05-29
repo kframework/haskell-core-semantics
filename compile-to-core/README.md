@@ -168,3 +168,11 @@ phant  : ⟶ Role
 ### `Coercion`
 
 __TODO__
+
+### `CoAxiom`
+
+__TODO__
+
+### `CoAxBranch`
+
+__TODO__
