@@ -57,6 +57,8 @@ There are 2 operators of sort `BindingList`.
 
 ### `Name`
 
+__TODO__: this uses `showSDocUnsafe`.
+
 ### `Expr` (`CoreExpr` in GHC Core)
 
 There are 10 constructors for the sort `Expr`.
