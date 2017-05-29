@@ -82,18 +82,24 @@ module HASKELL-CORE-EXECUTION
 
   syntax LocDef  ::= locDef(Int, Expr)
   syntax LocDefs ::= List{LocDef, ";"}
+  // `bindRec` seems to be just a list of `doBind`s.
   syntax K       ::= bindRec(BindingList, LocDefs, Expr)
 
   // S_LetNonRec
   rule let(nonRec(tmVar(_, name(V)), E2), E1) => doBind(V, E2, E1)
 
+  // Temporarily modify the environment to handle `doBind`.
   rule
     <k> doBind(V, val(L), Body) => Body ~> restoreEnv(Env) ... </k>
     <env> Env (. => V |-> val(L)) </env>
 
-  rule let(rec(Binds),E) => bindRec(Binds,.LocDefs,E)
+  // Turn let(rec(...), ...) into `bindRec`.
+  rule let(rec(Binds), E) => bindRec(Binds, .LocDefs, E)
+
+  // Ignore type variables for now.
   rule bindRec((bind(tyVar(_, _), _, Binds) => Binds), _, _)
 
+  // Structural rule for going through the `bindRec`.
   rule
     <k>
       bindRec((bind(tmVar(_, V), Def, Binds) => Binds), (L => locDef(!Loc, Def); L), E)
@@ -103,14 +109,31 @@ module HASKELL-CORE-EXECUTION
       Env => Env [ V <- !Loc ]
     </env>
 
+  // Handle `bindRec` with an `emptyBind`.
   rule
     <k> bindRec(emptyBind, LocDefs, E) => E ... </k>
     <env> Env </env>
     <store> ... (. => mkRecStore(Env, LocDefs)) ... </store>
 
+  // We create a mapping of locations to thunks for lazy evaluation.
   syntax Map ::= mkRecStore(Map, LocDefs) [function]
   rule mkRecStore(Env, .LocDefs) => .Map
   rule mkRecStore(Env, locDef(L, D); LocDefs)
          => (L |-> thunk(D, Env)) mkRecStore(Env, LocDefs)
+
+  // S_LetRec
+
+  // TODO: S_LetRecApp
+  rule app(let(rec(Binds), U), E) => let(rec(Binds), app(U, E))
+
+  // TODO: S_LetRecCast
+  // NOTE: SEMANTICS FOR COERCIONS DO NOT EXIST YET.
+  rule cast(let(rec(Binds), U), Gamma) => let(rec(Binds), cast(U, Gamma))
+
+  // TODO: S_LetRecCase
+
+  // TODO: S_LetRecFlat
+
+  // TODO: S_LetRecReturn
 
 endmodule
