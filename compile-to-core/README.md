@@ -49,6 +49,12 @@ There are 2 operators of sort `Binding`.
 
 ### `BindingList`
 
+There are 2 operators of sort `BindingList`.
+```
+  emptyBind : ⟶ BindingList
+  bind      : Var Expr BindingList ⟶ BindingList
+```
+
 ### `Name`
 
 ### `Expr` (`CoreExpr` in GHC Core)
