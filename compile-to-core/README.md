@@ -109,6 +109,18 @@ defaultAlt : ⟶ AltCon
 
 __TODO__: Leaving this out for now as it is not a priority.
 
+### `TyCon`
+
+There are 6 operators of sort `TyCon`.
+
+```
+  arrTyCon   : ⟶ TyCon
+  synTyCon   : ⟶ TyCon
+  tupleTyCon : ⟶ TyCon
+  algTyCon   : Name Type ⟶ TyCon
+  primTyCon  : PrimTyCon ⟶ TyCon
+```
+
 ### `UnivCoProvenance`
 
 __TODO__
