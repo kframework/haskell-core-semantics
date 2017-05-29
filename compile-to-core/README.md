@@ -39,16 +39,6 @@ to those who are not familiar with the implementation of Core. We list them to
 prevent confusion:
 * [`type CoreBndr = Var`](https://github.com/ghc/ghc/blob/6df8bef054db0b95bb8f9e55bb82580e27d251d6/compiler/coreSyn/CoreSyn.hs#L1734)
 
-### `Binding`
-
-Every Core program is a list of bindings (of type `Bind CoreBndr`). Every
-binding is either recursive or not. There are two operators that construct
-an AST of sort **Binding**: `rec` and `nonRec`.
-```
-  nonRec : CoreBndr ⟶ Expr ⟶ Binding
-  rec    : BindingList ⟶ Binding
-```
-
 ### `Binding` (`Bind CoreBndr` in GHC Core)
 
 There are 2 operators of sort `Binding`.
