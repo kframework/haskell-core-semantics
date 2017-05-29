@@ -51,7 +51,15 @@ an AST of sort **Binding**: `rec` and `nonRec`.
 
 ### `Binding` (`Bind CoreBndr` in GHC Core)
 
+There are 2 operators of sort `Binding`.
+```
+  nonRec : Var Expr ⟶ Binding
+  rec    : BindingList ⟶ Binding
+```
+
 ### `BindingList`
+
+### `Name`
 
 ### `Expr` (`CoreExpr` in GHC Core)
 
