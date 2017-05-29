@@ -94,7 +94,6 @@ There are 14 operators of sort `Literal`.
 ### `Tickish`
 
 There are 4 operators of sort `Tickish`.
-
 ```
   profNote    : ⟶ Tickish
   hpcTick     : ⟶ Tickish
@@ -103,6 +102,12 @@ There are 4 operators of sort `Tickish`.
 ```
 
 ### `Var`
+
+There are 2 operators of sort `Var`.
+```
+  tmVar : Type Name ⟶ Var
+  tyVar : Type Name ⟶ Var
+```
 
 ### `DataCon`
 
