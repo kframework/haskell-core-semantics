@@ -91,6 +91,17 @@ There are 14 operators of sort `Literal`.
   litInt             : Integer Type ⟶ Literal
 ```
 
+### `Tickish`
+
+There are 4 operators of sort `Tickish`.
+
+```
+  profNote    : ⟶ Tickish
+  hpcTick     : ⟶ Tickish
+  breakpoint  : ⟶ Tickish
+  sourceNote  : ⟶ Tickish
+```
+
 ### `Var`
 
 ### `DataCon`
@@ -120,6 +131,14 @@ There are 6 operators of sort `TyCon`.
   algTyCon   : Name Type ⟶ TyCon
   primTyCon  : PrimTyCon ⟶ TyCon
 ```
+
+### `VisibilityFlag`
+
+__TODO___
+
+### `TyLit`
+
+__TODO__
 
 ### `UnivCoProvenance`
 
