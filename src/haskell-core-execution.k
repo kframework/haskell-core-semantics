@@ -121,16 +121,18 @@ module HASKELL-CORE-EXECUTION
   rule mkRecStore(Env, locDef(L, D); LocDefs)
          => (L |-> thunk(D, Env)) mkRecStore(Env, LocDefs)
 
-  // S_LetRec
+  // TODO: S_LetRec
 
-  // TODO: S_LetRecApp
+  // S_LetRecApp
   rule app(let(rec(Binds), U), E) => let(rec(Binds), app(U, E))
 
-  // TODO: S_LetRecCast
+  // S_LetRecCast
   // NOTE: SEMANTICS FOR COERCIONS DO NOT EXIST YET.
   rule cast(let(rec(Binds), U), Gamma) => let(rec(Binds), cast(U, Gamma))
 
-  // TODO: S_LetRecCase
+  // S_LetRecCase
+  rule case(let(rec(Binds), U), tmVar(T, name(R)), Tau, AL)
+         => let(rec(Binds), case(U, tmVar(T, name(R)), Tau, AL))
 
   // TODO: S_LetRecFlat
 
