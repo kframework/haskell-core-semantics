@@ -42,6 +42,12 @@ module HASKELL-CORE-EXECUTION
     <env> .Map </env>
     <exit-code exit=""> 0::Int </exit-code>
 
+  // S_Var
+  rule
+    <k> tmVar(_, name(R)) => E ... </k>
+    <store> ... L |-> thunk(E, _) ... </store>
+    <env> ... R |-> val(L) ... </env>
+
   // TODO: check if type application
   // S_Beta: not evaluated immediately due to laziness
   rule app(lam(tmVar(_, name(R)), E1), E2) => doBind(R, E2, E1)
@@ -68,7 +74,7 @@ module HASKELL-CORE-EXECUTION
   // S_MatchData (first Alt doesn't match)
   rule
     <k> case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList) => AltList)) ... </k>
-    <store> ... V |-> data(C2, _) ...</store>
+    <store> ... V |-> data(C2, _) ... </store>
     requires C1 =/=K C2
 
   // S_MatchLit (first Alt matches)
