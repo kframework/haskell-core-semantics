@@ -39,21 +39,6 @@ to those who are not familiar with the implementation of Core. We list them to
 prevent confusion:
 * [`type CoreBndr = Var`](https://github.com/ghc/ghc/blob/6df8bef054db0b95bb8f9e55bb82580e27d251d6/compiler/coreSyn/CoreSyn.hs#L1734)
 
-### `Binding` (`Bind CoreBndr` in GHC Core)
-
-There are 2 operators of sort `Binding`.
-```
-  nonRec : Var Expr ⟶ Binding
-  rec    : BindingList ⟶ Binding
-```
-
-### `BindingList`
-
-There are 2 operators of sort `BindingList`.
-```
-  emptyBind : ⟶ BindingList
-  bind      : Var Expr BindingList ⟶ BindingList
-```
 
 ### `Name`
 
@@ -65,23 +50,6 @@ There are 2 operators of sort `Var`.
 ```
   tmVar : Type Name ⟶ Var
   tyVar : Type Name ⟶ Var
-```
-
-### `Expr` (`CoreExpr` in GHC Core)
-
-There are 10 constructors for the sort `Expr`.
-
-```
-  var    : Id ⟶ Expr
-  lit    : Literal ⟶ Expr
-  app    : Expr Expr ⟶ Expr
-  lam    : Binding Expr ⟶ Expr
-  let    : Binding Expr ⟶ Expr
-  case   : Expr Binding Type AltList ⟶ Expr
-  cast   : Expr Coercion ⟶ Expr
-  tick   : Tickish Expr ⟶ Expr
-  type   : Type ⟶ Expr
-  coerce : Coercion ⟶ Expr
 ```
 
 ### `Literal`
@@ -104,6 +72,40 @@ There are 14 operators of sort `Literal`.
   machLabelDataNone  : String ⟶ Literal
   litInt             : Integer Type ⟶ Literal
 ```
+
+### `Expr` (`CoreExpr` in GHC Core)
+
+There are 10 constructors for the sort `Expr`.
+
+```
+  var    : Id ⟶ Expr
+  lit    : Literal ⟶ Expr
+  app    : Expr Expr ⟶ Expr
+  lam    : Binding Expr ⟶ Expr
+  let    : Binding Expr ⟶ Expr
+  case   : Expr Binding Type AltList ⟶ Expr
+  cast   : Expr Coercion ⟶ Expr
+  tick   : Tickish Expr ⟶ Expr
+  type   : Type ⟶ Expr
+  coerce : Coercion ⟶ Expr
+```
+
+### `Binding` (`Bind CoreBndr` in GHC Core)
+
+There are 2 operators of sort `Binding`.
+```
+  nonRec : Var Expr ⟶ Binding
+  rec    : BindingList ⟶ Binding
+```
+
+### `BindingList`
+
+There are 2 operators of sort `BindingList`.
+```
+  emptyBind : ⟶ BindingList
+  bind      : Var Expr BindingList ⟶ BindingList
+```
+
 
 ### `Tickish`
 
