@@ -3,6 +3,8 @@ module HASKELL-CORE-SYNTAX
   syntax Var         ::= "tmVar" "(" Type "," Name ")"
                        | "tyVar" "(" Type "," Name ")"
 
+  syntax Rational    ::= Int "%" Int
+
   // TODO: Native support for chars and rationals (char, float, double)
   syntax Lit         ::= "machChar"
                        | "machStr"           "(" String ")"
@@ -11,8 +13,8 @@ module HASKELL-CORE-SYNTAX
                        | "machInt64"         "(" Int ")"
                        | "machWord"          "(" Int ")"
                        | "machWord64"        "(" Int ")"
-                       | "machFloat"
-                       | "machDouble"
+                       | "machFloat"         "(" Rational ")"
+                       | "machDouble"        "(" Rational ")"
                        | "machLabelFunSome"  "(" String "," Int ")"
                        | "machLabelDataSome" "(" String "," Int ")"
                        | "machLabelFunNone"  "(" String ")"
