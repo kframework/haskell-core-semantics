@@ -59,6 +59,14 @@ There are 2 operators of sort `BindingList`.
 
 __TODO__: this uses `showSDocUnsafe`.
 
+### `Var`
+
+There are 2 operators of sort `Var`.
+```
+  tmVar : Type Name ⟶ Var
+  tyVar : Type Name ⟶ Var
+```
+
 ### `Expr` (`CoreExpr` in GHC Core)
 
 There are 10 constructors for the sort `Expr`.
@@ -105,14 +113,6 @@ There are 4 operators of sort `Tickish`.
   hpcTick     : ⟶ Tickish
   breakpoint  : ⟶ Tickish
   sourceNote  : ⟶ Tickish
-```
-
-### `Var`
-
-There are 2 operators of sort `Var`.
-```
-  tmVar : Type Name ⟶ Var
-  tyVar : Type Name ⟶ Var
 ```
 
 ### `DataCon`
