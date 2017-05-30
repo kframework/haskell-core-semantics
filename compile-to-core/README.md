@@ -75,7 +75,7 @@ There are 14 operators of sort `Literal`.
 
 ### `Expr` (`CoreExpr` in GHC Core)
 
-There are 10 constructors for the sort `Expr`.
+There are 10 operators of sort `Expr`.
 
 ```
   var    : Id ⟶ Expr
