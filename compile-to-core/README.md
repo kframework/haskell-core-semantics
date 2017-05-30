@@ -52,10 +52,13 @@ There are 2 operators of sort `Var`.
   tyVar : Type Name ⟶ Var
 ```
 
+### `Rational`
+
+__TODO__
+
 ### `Literal`
 
 There are 14 operators of sort `Literal`.
-
 ```
   machChar           : Char ⟶ Literal
   machStr            : ByteString ⟶ Literal
@@ -76,7 +79,6 @@ There are 14 operators of sort `Literal`.
 ### `Expr` (`CoreExpr` in GHC Core)
 
 There are 10 operators of sort `Expr`.
-
 ```
   var    : Id ⟶ Expr
   lit    : Literal ⟶ Expr
@@ -106,7 +108,6 @@ There are 2 operators of sort `BindingList`.
   bind      : Var Expr BindingList ⟶ BindingList
 ```
 
-
 ### `Tickish`
 
 There are 4 operators of sort `Tickish`.
@@ -119,10 +120,14 @@ There are 4 operators of sort `Tickish`.
 
 ### `DataCon`
 
+There is one operator of sort `DataCon`.
+```
+  dataCon : Name ⟶ DataCon
+```
+
 ### `AltCon`
 
 There are three operators of sort `AltCon`.
-
 ```
 dataAlt    : DataCon ⟶ AltCon
 litAlt     : Literal ⟶ AltCon

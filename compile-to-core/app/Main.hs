@@ -67,9 +67,6 @@ prAltCon _   (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
 prAltCon flg (LitAlt lit) = "litAlt" ++ args [prLit flg lit]
 prAltCon _   DEFAULT      = "defaultAlt()"
 
-prPrimTyCon :: TyCon -> String
-prPrimTyCon tc = prName $ tyConName tc
-
 prTyCon :: Flags -> TyCon -> String
 prTyCon flg tc
   | isFunTyCon tc =
@@ -81,7 +78,7 @@ prTyCon flg tc
   | isAlgTyCon tc =
       let as = [prName (tyConName tc), prType flg $ tyConKind tc] in
       "algTyCon" ++ args as
-  | isPrimTyCon tc = "primTyCon" ++ args [prPrimTyCon tc]
+  | isPrimTyCon tc = "primTyCon" ++ args [prName $ tyConName tc]
   | isPromotedDataCon tc =
       case isPromotedDataCon_maybe tc of
         Just tc' -> "promDataCon" ++ args [prDataCon tc']
