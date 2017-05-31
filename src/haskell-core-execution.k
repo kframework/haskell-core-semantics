@@ -90,9 +90,9 @@ module HASKELL-CORE-EXECUTION
     <env>Env</env>
     <store>... (. => !L |-> tyabs(Body,Env)) ...</store>
   rule
-    <k>lam(tmVar(_,R),Body) => val(!L) ...</k>
+    <k>lam(tmVar(_, R), Body) => val(!L) ...</k>
     <env>Env</env>
-    <store>... (. => !L |-> closure(R,Body,Env)) ...</store>
+    <store>... (. => !L |-> closure(R, Body, Env)) ...</store>
 
   // Let
   rule let(nonRec(tmVar(_, V), E2), E1) => scope(doBind(V, E2, E1))
@@ -129,6 +129,7 @@ module HASKELL-CORE-EXECUTION
   // default
   rule case(val(L), tmVar(_, R), _, altCons(alt(defaultAlt(), _, E), _))
          => scope(doBind(R, val(L), E))
+
   // matching constructor
   rule
     <k>
@@ -136,6 +137,7 @@ module HASKELL-CORE-EXECUTION
         => scope(doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E)))
       ...</k>
     <store>... V |-> data(C, Fields) ...</store>
+
   // different constructor
   rule
     <k>
@@ -149,6 +151,7 @@ module HASKELL-CORE-EXECUTION
       ...
     </store>
     requires C1 =/=K C2
+
   // matching lit
   rule case(lit(L), tmVar(_, R), _, altCons(alt(litAlt(L), _, E), _))
          => scope(doBind(R, lit(L), E))
