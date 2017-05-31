@@ -49,52 +49,54 @@ module HASKELL-CORE-EXECUTION
     <env> .Map </env>     // Name |-> Loc
     <exit-code exit=""> 0::Int </exit-code>
 
-  // S_Var
+  /*------------------------------------------------------------
+  RULES FOR VAR
+  ------------------------------------------------------------*/
   rule
-    <k> var(tmVar(_, name(R))) => val(L) ... </k>
-    <store> ... L |-> data(_,_) ... </store>
+    <k> var(tmVar(_, R)) => val(L) ... </k>
+    <store> ... L |-> data(_, _) ... </store>
     <env> ... R |-> L ... </env>
   rule
-    <k> var(tmVar(_, name(R))) => val(L) ... </k>
-    <store> ... L |-> closure(_,_,_) ... </store>
+    <k> var(tmVar(_, R)) => val(L) ... </k>
+    <store> ... L |-> closure(_, _, _) ... </store>
     <env> ... R |-> L ... </env>
-
   rule // could shortcut the store entry also
-    <k> var(tmVar(_, name(R))) ... </k>
+    <k> var(tmVar(_, R)) ... </k>
     <store> ... L |-> indirection(L') ... </store>
     <env> ... R |-> (L => L') ... </env>
   rule
-    <k> (. => force(E,Env,L)) ~> var(tmVar(_, name(R))) ... </k>
+    <k> (. => force(E, Env, L)) ~> var(tmVar(_, R)) ... </k>
     <store> ... L |-> thunk(E, Env) ... </store>
     <env> ... R |-> L ... </env>
   rule
-     <k> force(E,Env,L) => update(E,L) ~> restoreEnv(EOld) ...</k>
+     <k> force(E, Env, L) => update(E, L) ~> restoreEnv(EOld) ... </k>
      <env> EOld => Env </env>
   rule
-      <k>update(val(L'),L) => . ...</k>
-      <store>... L |-> (_ => indirection(L')) ...</store>
+      <k> update(val(L'), L) => . ... </k>
+      <store> ... L |-> (_ => indirection(L')) ... </store>
 
-  // S_App
+  // App
   rule
-    <k>app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ...</k>
+    <k> app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ... </k>
     <env> EOld => Env </env>
-    <store> ... L |-> closure(R, Body,Env) ...</store>
+    <store> ... L |-> closure(R, Body, Env) ... </store>
   rule
-    <k>app(val(L), _) => Body ~> restoreEnv(EOld) ...</k>
+    <k> app(val(L), _) => Body ~> restoreEnv(EOld) ... </k>
     <env> EOld => Env </env>
-    <store> ... L |-> tyabs(Body,Env) ...</store>
+    <store> ... L |-> tyabs(Body, Env) ... </store>
 
   // Lam
   rule
-    <k>lam(tyVar(_, _), Body) => val(!L) ...</k>
-    <env>Env</env>
-    <store>... (. => !L |-> tyabs(Body,Env)) ...</store>
+    <k> lam(tyVar(_, _), Body) => val(!L) ... </k>
+    <env> Env </env>
+    <store> ... (. => !L |-> tyabs(Body, Env)) ... </store>
   rule
-    <k>lam(tmVar(_, R), Body) => val(!L) ...</k>
-    <env>Env</env>
-    <store>... (. => !L |-> closure(R, Body, Env)) ...</store>
+    <k> lam(tmVar(_, R), Body) => val(!L) ... </k>
+    <env> Env </env>
+    <store> ... (. => !L |-> closure(R, Body, Env)) ... </store>
 
   // Let
+  /* TODO: Let's might need flattening and so on (look at S_LetRecFlat). */
   rule let(nonRec(tmVar(_, V), E2), E1) => scope(doBind(V, E2, E1))
   rule let(rec(Binds), E) => scope(bindRec(Binds, .LocDefs, E))
 
@@ -108,7 +110,8 @@ module HASKELL-CORE-EXECUTION
   rule bindRec((bind(tyVar(_, _), _, Binds) => Binds), _, _)
   rule
     <k>
-      bindRec((bind(tmVar(_, V), Def, Binds) => Binds), (L => locDef(!Loc, Def); L), E)
+      bindRec((bind(tmVar(_, V), Def, Binds) => Binds),
+              (L => locDef(!Loc, Def); L), E)
       ...
     </k>
     <env> Env => Env [ V <- !Loc ] </env>
@@ -143,7 +146,7 @@ module HASKELL-CORE-EXECUTION
     <k>
       case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList)
              => AltList))
-    ...
+      ...
     </k>
     <store>
       ...
@@ -170,9 +173,9 @@ module HASKELL-CORE-EXECUTION
   // does not need any evaluation rules,
   // all type applications should discard the argument.
 
-  rule <k>restoreEnv(Env) => . ...</k>
+  rule <k> restoreEnv(Env) => . ... </k>
        <env> _ => Env </env>
-  rule <k>scope(K) => K ~> restoreEnv(Env) ...</k>
+  rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
        <env> Env </env>
   // Temporarily modify the environment to handle `doBind`.
   rule
