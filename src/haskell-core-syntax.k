@@ -27,13 +27,10 @@ module HASKELL-CORE-COMMON
   syntax Binding  ::= "nonRec" "(" Var "," Expr ")"
                     | "rec" "(" BindingList ")"
 
-  syntax Let      ::= Binding "," Expr
-
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
   syntax HsId
-
   syntax Name     ::= "name" "(" HsId ")"
 
   syntax DataCon  ::= "dataCon" "(" Name ")"
@@ -71,19 +68,13 @@ module HASKELL-CORE-COMMON
                     | Coercion
   syntax LitExpr ::= "lit"  "(" Lit ")"
 
-  syntax SeqBind  ::= Binding | Binding SeqBind
-
-  syntax Pgm       ::= SeqBind
+  syntax SeqBind  ::= Binding | Binding SeqBind [klabel(bindings)]
 
 endmodule
 
 module HASKELL-CORE-SYNTAX
+
   imports HASKELL-CORE-COMMON
-  syntax HsId ::= r"[a-zA-Z][a-zA-Z]*" [notInRules]
-  /*
-                  "$" Id
-                   | Id "#"
-                   | "[]" | ":" | "/="
- */
+  syntax HsId ::= r"[a-zA-Z0-9\\_$#:\\[\\]'/\\-+=][a-zA-Z0-9\\_$#:\\[\\]'/\\-+=]*"
 
 endmodule

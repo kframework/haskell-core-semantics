@@ -7,7 +7,7 @@ module HASKELL-CORE-EXECUTION
   imports MAP
 
   // Addresses in the store
-  syntax Locs     ::= List{Loc, ";"}
+  syntax Locs     ::= List{Loc, ";"} [klabel(locList)]
   syntax Loc      ::= Int
 
   // Contents of the store
@@ -31,7 +31,7 @@ module HASKELL-CORE-EXECUTION
                     | force(Expr,Map,Loc)
                     | update(Expr,Loc) [strict(1)]
 
-  syntax Names      ::= List{Name, ";"}
+  syntax Names      ::= List{Name, ";"} [klabel(nameList)]
   syntax Names      ::= getTmVars(VarList) [function]
 
   // Get Ids out of VarList
@@ -43,7 +43,7 @@ module HASKELL-CORE-EXECUTION
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
   configuration
-    <k> $PGM:K </k>
+    <k> $PGM:SeqBind </k>
     <store> .Map </store> // Loc |-> Object
     <env> .Map </env>     // Name |-> Loc
     <exit-code exit=""> 0::Int </exit-code>
@@ -99,7 +99,7 @@ module HASKELL-CORE-EXECUTION
 
   // letrec helpers
   syntax LocDef  ::= locDef(Int, Expr)
-  syntax LocDefs ::= List{LocDef, ";"}
+  syntax LocDefs ::= List{LocDef, ";"} [klabel(locDefList)]
   // `bindRec` seems to be just a list of `doBind`s.
   syntax K       ::= bindRec(BindingList, LocDefs, Expr)
 
