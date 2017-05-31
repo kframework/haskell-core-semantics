@@ -138,8 +138,13 @@ module HASKELL-CORE-EXECUTION
     <k>
       case(val(V), tmVar(_, R), _, altCons(alt(dataAlt(C), Vars, E), _))
         => scope(doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E)))
-      ...</k>
-    <store>... V |-> data(C, Fields) ...</store>
+      ...
+    </k>
+    <store>
+      ...
+      V |-> data(C, Fields)
+      ...
+    </store>
 
   // different constructor
   rule
@@ -161,7 +166,7 @@ module HASKELL-CORE-EXECUTION
   // different lit
   rule
     case(lit(L1), _, _, (altCons(alt(litAlt(L2), _, E), AltList) => AltList))
-    when L1 =/=K L2
+    requires L1 =/=K L2
 
   // Cast
   rule cast(E, _) => E
