@@ -1,4 +1,4 @@
-module HASKELL-CORE-SYNTAX
+module HASKELL-CORE-COMMON
 
   syntax Var         ::= "tmVar" "(" Type "," Name ")"
                        | "tyVar" "(" Type "," Name ")"
@@ -32,11 +32,9 @@ module HASKELL-CORE-SYNTAX
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
-  syntax Id       ::= "$" Id
-                    | Id "#"
-                    | "[]" | ":" | "/="
+  syntax HsId
 
-  syntax Name     ::= "name" "(" Id ")"
+  syntax Name     ::= "name" "(" HsId ")"
 
   syntax DataCon  ::= "dataCon" "(" Name ")"
 
@@ -61,8 +59,8 @@ module HASKELL-CORE-SYNTAX
 
   // TODO: the "lit" case here should be a KResult
   syntax Expr     ::= "var"  "(" Var ")"
-                    | "lit"  "(" Lit ")"
-                    | "app"  "(" Expr "," Expr ")"
+                    | LitExpr
+                    | "app"  "(" Expr "," Expr ")" [strict(1)]
                     | "lam"  "(" Var "," Expr ")"
                     | "let"  "(" Binding "," Expr ")"
                     | "case" "(" Expr "," Var "," Type "," AltList ")"
@@ -71,9 +69,21 @@ module HASKELL-CORE-SYNTAX
                     | "tick" "(" Tickish "," Expr ")"
                     | "type" "(" Type ")"
                     | Coercion
+  syntax LitExpr ::= "lit"  "(" Lit ")"
 
   syntax SeqBind  ::= Binding | Binding SeqBind
 
   syntax Pgm       ::= SeqBind
+
+endmodule
+
+module HASKELL-CORE-SYNTAX
+  imports HASKELL-CORE-COMMON
+  syntax HsId ::= r"[a-zA-Z][a-zA-Z]*" [notInRules]
+  /*
+                  "$" Id
+                   | Id "#"
+                   | "[]" | ":" | "/="
+ */
 
 endmodule

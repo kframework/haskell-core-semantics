@@ -1,7 +1,7 @@
 require "haskell-core-syntax.k"
 
 module HASKELL-CORE-EXECUTION
-  imports HASKELL-CORE-SYNTAX
+  imports HASKELL-CORE-COMMON
   imports INT
   imports K-REFLECTION
   imports MAP
@@ -12,110 +12,107 @@ module HASKELL-CORE-EXECUTION
 
   // Contents of the store
   syntax Object   ::= data(DataCon, Locs)
-                    | abs(Var, Expr, Map) // closure
+                    | closure(Name, Expr, Map) // closure
+                    | tyabs(Expr, Map) // type abstraction closure
                     | thunk(Expr, Map)
+                    | indirection(Loc)
 
-  // Store addresses are expressions in WHNF
-  syntax KResult  ::= val(Loc)
+  syntax KResult  ::= val(Loc) // val should be used only
+                               // with evaluated constants.
+                    | LitExpr
   syntax Expr     ::= KResult
 
   // doBind: binds Id to Expr (for evaluation in K) without forcing
   // the evaluation of Expr.
-  syntax K        ::= doBind(Id, Expr, K)
-                    | bindVals(Ids, Locs, K)
+  syntax K        ::= doBind(Name, Expr, K) [strict(2)]
+                    | bindVals(Names, Locs, K)
+                    | scope(K)
                     | restoreEnv(Map) // environment to reinstate
+                    | force(Expr,Map,Loc)
+                    | update(Expr,Loc) [strict(1)]
 
-  syntax Ids      ::= List{Id, ";"}
-  syntax Ids      ::= getTmVars(VarList) [function]
+  syntax Names      ::= List{Name, ";"}
+  syntax Names      ::= getTmVars(VarList) [function]
 
   // Get Ids out of VarList
-  rule getTmVars(VarEmpty)                         => .Ids
-  rule getTmVars(VarCons(tmVar(_, name(I)), Vars)) => I; getTmVars(Vars)
-  rule getTmVars(VarCons(tyVar(_, _), Vars))       => getTmVars(Vars)
+  rule getTmVars(VarEmpty)                   => .Names
+  rule getTmVars(VarCons(tmVar(_, N), Vars)) => N; getTmVars(Vars)
+  rule getTmVars(VarCons(tyVar(_, _), Vars)) => getTmVars(Vars)
 
   // NB: Some rules in core_spec.pdf are accounted for due to strictness of the
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
   configuration
     <k> $PGM:K </k>
-    <store> .Map </store>
-    <env> .Map </env>
+    <store> .Map </store> // Loc |-> Object
+    <env> .Map </env>     // Name |-> Loc
     <exit-code exit=""> 0::Int </exit-code>
 
-  // S_Var
+  // Var
   rule
-    <k> tmVar(_, name(R)) => E ... </k>
-    <store> ... L |-> thunk(E, _) ... </store>
-    <env> ... R |-> val(L) ... </env>
-
-  // TODO: check if type application
-  // S_Beta: not evaluated immediately due to laziness
-  rule app(lam(tmVar(_, name(R)), E1), E2) => doBind(R, E2, E1)
-
-  rule cast(E, _) => E
-
-  // S_MatchDefault
-  rule case(val(V), tmVar(_, name(R)), _, altCons(alt(defaultAlt(), _, E), _))
-         => doBind(R, val(V), E)
-
-  // S_MatchData (first Alt matches)
+    <k> var(tmVar(_, name(R))) => val(L) ... </k>
+    <store> ... L |-> data(_,_) ... </store>
+    <env> ... R |-> L ... </env>
   rule
-    <k>
-      case(val(V), tmVar(_, name(R)), _, altCons(alt(dataAlt(C), Vars, E), _))
-        => doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E))
-      ...
-    </k>
-    <store>
-      ...
-      V |-> data(C, Fields)
-      ...
-    </store>
+    <k> var(tmVar(_, name(R))) => val(L) ... </k>
+    <store> ... L |-> closure(_,_,_) ... </store>
+    <env> ... R |-> L ... </env>
 
-  // S_MatchData (first Alt doesn't match)
+  rule // could shortcut the store entry also
+    <k> var(tmVar(_, name(R))) ... </k>
+    <store> ... L |-> indirection(L') ... </store>
+    <env> ... R |-> (L => L') ... </env>
   rule
-    <k> case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList) => AltList)) ... </k>
-    <store> ... V |-> data(C2, _) ... </store>
-    requires C1 =/=K C2
-
-  // S_MatchLit (first Alt matches)
-  rule case(lit(L), tmVar(_, name(R)), _, altCons(alt(litAlt(L), _, E), _))
-         => doBind(R, lit(L), E)
-
-  // S_MatchLit (first Alt doesn't match)
+    <k> (. => force(E,Env,L)) ~> var(tmVar(_, name(R))) ... </k>
+    <store> ... L |-> thunk(E, Env) ... </store>
+    <env> ... R |-> L ... </env>
   rule
-    case(lit(L1), _, _, (altCons(alt(litAlt(L2), _, E), AltList) => AltList))
-    when L1 =/=K L2
+     <k> force(E,Env,L) => update(E,L) ~> restoreEnv(EOld) ...</k>
+     <env> EOld => Env </env>
+  rule
+      <k>update(val(L'),L) => . ...</k>
+      <store>... L |-> (_ => indirection(L')) ...</store>
 
+  // App
+  rule
+    <k>app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ...</k>
+    <env> EOld => Env </env>
+    <store> ... L |-> closure(R, Body,Env) ...</store>
+  rule
+    <k>app(val(L), _) => Body ~> restoreEnv(EOld) ...</k>
+    <env> EOld => Env </env>
+    <store> ... L |-> tyabs(Body,Env) ...</store>
+
+  // Lam
+  rule
+    <k>lam(tyVar(_,_),Body) => val(!L) ...</k>
+    <env>Env</env>
+    <store>... (. => !L |-> tyabs(Body,Env)) ...</store>
+  rule
+    <k>lam(tmVar(_,R),Body) => val(!L) ...</k>
+    <env>Env</env>
+    <store>... (. => !L |-> closure(R,Body,Env)) ...</store>
+
+  // Let
+  rule let(nonRec(tmVar(_, V), E2), E1) => scope(doBind(V, E2, E1))
+  rule let(rec(Binds), E) => scope(bindRec(Binds, .LocDefs, E))
+
+  // letrec helpers
   syntax LocDef  ::= locDef(Int, Expr)
   syntax LocDefs ::= List{LocDef, ";"}
   // `bindRec` seems to be just a list of `doBind`s.
   syntax K       ::= bindRec(BindingList, LocDefs, Expr)
 
-  // S_LetNonRec
-  rule let(nonRec(tmVar(_, name(V)), E2), E1) => doBind(V, E2, E1)
-
-  // Temporarily modify the environment to handle `doBind`.
-  rule
-    <k> doBind(V, val(L), Body) => Body ~> restoreEnv(Env) ... </k>
-    <env> Env (. => V |-> val(L)) </env>
-
-  // Turn let(rec(...), ...) into `bindRec`.
-  rule let(rec(Binds), E) => bindRec(Binds, .LocDefs, E)
-
-  // Ignore type variables for now.
+  // Make a new scope with all bindings
   rule bindRec((bind(tyVar(_, _), _, Binds) => Binds), _, _)
-
-  // Structural rule for going through the `bindRec`.
   rule
     <k>
       bindRec((bind(tmVar(_, V), Def, Binds) => Binds), (L => locDef(!Loc, Def); L), E)
       ...
     </k>
-    <env>
-      Env => Env [ V <- !Loc ]
-    </env>
-
-  // Handle `bindRec` with an `emptyBind`.
+    <env> Env => Env [ V <- !Loc ] </env>
+  // once all bindings are processed we have the final environment,
+  // create the recursive thunks
   rule
     <k> bindRec(emptyBind, LocDefs, E) => E ... </k>
     <env> Env </env>
@@ -127,21 +124,47 @@ module HASKELL-CORE-EXECUTION
   rule mkRecStore(Env, locDef(L, D); LocDefs)
          => (L |-> thunk(D, Env)) mkRecStore(Env, LocDefs)
 
-  // TODO: S_LetRec
+  // Case
+  // default
+  rule case(val(L), tmVar(_, R), _, altCons(alt(defaultAlt(), _, E), _))
+         => scope(doBind(R, val(L), E))
+  // matching constructor
+  rule
+    <k>
+      case(val(V), tmVar(_, R), _, altCons(alt(dataAlt(C), Vars, E), _))
+        => scope(doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E)))
+      ...</k>
+    <store>... V |-> data(C, Fields) ...</store>
+  // different constructor
+  rule
+    <k> case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList) => AltList)) ... </k>
+    <store> ... V |-> data(C2, _) ... </store>
+    requires C1 =/=K C2
+  // matching lit
+  rule case(lit(L), tmVar(_, R), _, altCons(alt(litAlt(L), _, E), _))
+         => scope(doBind(R, lit(L), E))
+  // different lit
+  rule
+    case(lit(L1), _, _, (altCons(alt(litAlt(L2), _, E), AltList) => AltList))
+    when L1 =/=K L2
 
-  // S_LetRecApp
-  rule app(let(rec(Binds), U), E) => let(rec(Binds), app(U, E))
+  // Cast
+  rule cast(E, _) => E
 
-  // S_LetRecCast
-  // NOTE: SEMANTICS FOR COERCIONS DO NOT EXIST YET.
-  rule cast(let(rec(Binds), U), Gamma) => let(rec(Binds), cast(U, Gamma))
+  // Tick (debugging info)
+  rule tick(_,E) => E
 
-  // S_LetRecCase
-  rule case(let(rec(Binds), U), tmVar(T, name(R)), Tau, AL)
-         => let(rec(Binds), case(U, tmVar(T, name(R)), Tau, AL))
+  // Type
+  // does not need any evaluation rules,
+  // all type applications should discard the argument.
 
-  // TODO: S_LetRecFlat
-
-  // TODO: S_LetRecReturn
+  rule <k>restoreEnv(Env) => . ...</k>
+       <env> _ => Env </env>
+  rule <k>scope(K) => K ~> restoreEnv(Env) ...</k>
+       <env> Env </env>
+  // Temporarily modify the environment to handle `doBind`.
+  rule
+    <k> doBind(V, val(L), Body) => Body ... </k>
+    <env>... (. => V |-> val(L)) ...</env>
 
 endmodule
