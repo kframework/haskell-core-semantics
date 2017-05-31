@@ -7,29 +7,30 @@ module HASKELL-CORE-EXECUTION
   imports MAP
 
   // Addresses in the store
-  syntax Locs     ::= List{Loc, ";"} [klabel(locList)]
-  syntax Loc      ::= Int
+  syntax Locs       ::= List{Loc, ";"} [klabel(locList)]
+  syntax Loc        ::= Int
 
   // Contents of the store
-  syntax Object   ::= data(DataCon, Locs)
-                    | closure(Name, Expr, Map) // closure
-                    | tyabs(Expr, Map) // type abstraction closure
-                    | thunk(Expr, Map)
-                    | indirection(Loc)
+  syntax Object     ::= data(DataCon, Locs)
+                      | closure(Name, Expr, Map) // closure
+                      | tyabs(Expr, Map) // type abstraction closure
+                      | thunk(Expr, Map)
+                      | indirection(Loc)
 
-  syntax KResult  ::= val(Loc) // val should be used only
-                               // with evaluated constants.
-                    | LitExpr
-  syntax Expr     ::= KResult
+  syntax KResult    ::= val(Loc) /* val should be used only
+                                 with evaluated constants. */
+                      | LitExpr
+
+  syntax Expr       ::= KResult
 
   // doBind: binds Id to Expr (for evaluation in K) without forcing
   // the evaluation of Expr.
-  syntax K        ::= doBind(Name, Expr, K) [strict(2)]
-                    | bindVals(Names, Locs, K)
-                    | scope(K)
-                    | restoreEnv(Map) // environment to reinstate
-                    | force(Expr,Map,Loc)
-                    | update(Expr,Loc) [strict(1)]
+  syntax K          ::= doBind(Name, Expr, K) [strict(2)]
+                      | bindVals(Names, Locs, K)
+                      | scope(K)
+                      | restoreEnv(Map) // environment to reinstate
+                      | force(Expr, Map, Loc)
+                      | update(Expr, Loc) [strict(1)]
 
   syntax Names      ::= List{Name, ";"} [klabel(nameList)]
   syntax Names      ::= getTmVars(VarList) [function]
@@ -48,7 +49,7 @@ module HASKELL-CORE-EXECUTION
     <env> .Map </env>     // Name |-> Loc
     <exit-code exit=""> 0::Int </exit-code>
 
-  // Var
+  // S_Var
   rule
     <k> var(tmVar(_, name(R))) => val(L) ... </k>
     <store> ... L |-> data(_,_) ... </store>
@@ -73,7 +74,7 @@ module HASKELL-CORE-EXECUTION
       <k>update(val(L'),L) => . ...</k>
       <store>... L |-> (_ => indirection(L')) ...</store>
 
-  // App
+  // S_App
   rule
     <k>app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ...</k>
     <env> EOld => Env </env>
@@ -85,7 +86,7 @@ module HASKELL-CORE-EXECUTION
 
   // Lam
   rule
-    <k>lam(tyVar(_,_),Body) => val(!L) ...</k>
+    <k>lam(tyVar(_, _), Body) => val(!L) ...</k>
     <env>Env</env>
     <store>... (. => !L |-> tyabs(Body,Env)) ...</store>
   rule
@@ -137,8 +138,16 @@ module HASKELL-CORE-EXECUTION
     <store>... V |-> data(C, Fields) ...</store>
   // different constructor
   rule
-    <k> case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList) => AltList)) ... </k>
-    <store> ... V |-> data(C2, _) ... </store>
+    <k>
+      case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList)
+             => AltList))
+    ...
+    </k>
+    <store>
+      ...
+      V |-> data(C2, _)
+      ...
+    </store>
     requires C1 =/=K C2
   // matching lit
   rule case(lit(L), tmVar(_, R), _, altCons(alt(litAlt(L), _, E), _))
@@ -152,7 +161,7 @@ module HASKELL-CORE-EXECUTION
   rule cast(E, _) => E
 
   // Tick (debugging info)
-  rule tick(_,E) => E
+  rule tick(_, E) => E
 
   // Type
   // does not need any evaluation rules,
@@ -165,6 +174,6 @@ module HASKELL-CORE-EXECUTION
   // Temporarily modify the environment to handle `doBind`.
   rule
     <k> doBind(V, val(L), Body) => Body ... </k>
-    <env>... (. => V |-> val(L)) ...</env>
+    <env> ... (. => V |-> val(L)) ... </env>
 
 endmodule
