@@ -54,7 +54,6 @@ module HASKELL-CORE-COMMON
 
   syntax Coercion ::= "TODO"
 
-  // TODO: the "lit" case here should be a KResult
   syntax Expr     ::= "var"  "(" Var ")"
                     | LitExpr
                     | "app"  "(" Expr "," Expr ")" [strict(1)]
