@@ -67,7 +67,7 @@ module HASKELL-CORE-COMMON
                     | Coercion
   syntax LitExpr ::= "lit"  "(" Lit ")"
 
-  syntax SeqBind  ::= Binding | Binding SeqBind [klabel(bindings)]
+  syntax SeqBind ::= Binding | Binding SeqBind [klabel(bindings)]
 
 endmodule
 
