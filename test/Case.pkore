@@ -1,0 +1,13 @@
+case(
+  lit(machStr("seventeen")),
+  tmVar(<type>, name(x)),
+  <type>,
+  altCons(
+    alt(
+      defaultAlt(),
+      VarEmpty,
+      lit(machInt(42))
+    ),
+    altEmpty
+  )
+)
