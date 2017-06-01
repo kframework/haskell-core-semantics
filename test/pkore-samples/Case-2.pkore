@@ -1,0 +1,5 @@
+let(nonRec(tmVar(<type>, name(ds_d1hc)), lit(litInt(0, <type>))),
+    case(app(app(app(app(var(tmVar(<type>, name(==))), type(<type>)),
+      var(tmVar(<type>, name($fEqInteger)))), var(tmVar(<type>, name(ds_d1hc)))),
+      lit(litInt(0, <type>))), tmVar(<type>, name(wild_00)), <type>, altCons(alt(dataAlt(dataCon(name(False))), VarEmpty, app(lam(tmVar(<type>, name(ds_d1hg)), var(tmVar(<type>, name(ds_d1hc)))), var(tmVar(<type>, name(void#))))), altCons(alt(dataAlt(dataCon(name(True))), VarEmpty, app(app(app(var(tmVar(<type>, name(negate))), type(<type>)), var(tmVar(<type>, name($fNumInteger)))), lit(litInt(1, <type>)))), altEmpty)))
+    )
