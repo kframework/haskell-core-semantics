@@ -141,6 +141,10 @@ module HASKELL-CORE-EXECUTION
   rule case(val(L), tmVar(_, R), _, altCons(alt(defaultAlt(), _, E), _))
          => scope(doBind(R, val(L), E))
 
+  // Matching Lit for the default case.
+  rule case(lit(M), tmVar(_, R), _, altCons(alt(defaultAlt(), _, E), _))
+         => scope(doBind(R, lit(M), E))
+
   // matching constructor
   rule
     <k>
