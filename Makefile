@@ -1,5 +1,5 @@
 all:
-		time kompile --verbose --syntax-module HASKELL-CORE-SYNTAX src/haskell-core.k
+		time kompile --debug --verbose --syntax-module HASKELL-CORE-SYNTAX src/haskell-core.k
 		rm -rf haskell-core-kompiled
 		mv -f src/haskell-core-kompiled .
 
