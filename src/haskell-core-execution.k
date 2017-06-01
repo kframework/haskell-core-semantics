@@ -9,6 +9,9 @@ module HASKELL-CORE-EXECUTION
   // Addresses in the store
   syntax Locs       ::= List{Loc, ";"} [klabel(locList)]
   syntax Loc        ::= Int
+                      | freshLoc(Int)  [freshGenerator, function]
+
+  rule freshLoc(X:Int) => X
 
   // Contents of the store
   syntax Object     ::= data(DataCon, Locs)
@@ -16,6 +19,7 @@ module HASKELL-CORE-EXECUTION
                       | tyabs(Expr, Map) // type abstraction closure
                       | thunk(Expr, Map)
                       | indirection(Loc)
+                      | litObj(Lit)
 
   syntax KResult    ::= val(Loc) /* val should be used only
                                  with evaluated constants. */
@@ -44,7 +48,7 @@ module HASKELL-CORE-EXECUTION
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
   configuration
-    <k> $PGM:SeqBind </k>
+    <k> $PGM:K </k>
     <store> .Map </store> // Loc |-> Object
     <env> .Map </env>     // Name |-> Loc
     <exit-code exit=""> 0::Int </exit-code>
@@ -59,6 +63,10 @@ module HASKELL-CORE-EXECUTION
   rule
     <k> var(tmVar(_, R)) => val(L) ... </k>
     <store> ... L |-> closure(_, _, _) ... </store>
+    <env> ... R |-> L ... </env>
+  rule
+    <k> var(tmVar(_, R)) => val(L) ... </k>
+    <store> ... L |-> litObj(_) ... </store>
     <env> ... R |-> L ... </env>
   rule // could shortcut the store entry also
     <k> var(tmVar(_, R)) ... </k>
@@ -186,5 +194,9 @@ module HASKELL-CORE-EXECUTION
   rule
     <k> doBind(V, val(L), Body) => Body ... </k>
     <env> ... (. => V |-> val(L)) ... </env>
+  rule
+    <k> doBind(V, lit(M), Body) => Body ... </k>
+    <env> ...  (. => V |-> !Loc) ... </env>
+    <store> ... (. => !Loc |-> litObj(M)) ... </store>
 
 endmodule
