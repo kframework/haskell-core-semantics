@@ -193,7 +193,7 @@ module HASKELL-CORE-EXECUTION
   // Temporarily modify the environment to handle `doBind`.
   rule
     <k> doBind(V, val(L), Body) => Body ... </k>
-    <env> ... (. => V |-> val(L)) ... </env>
+    <env> ... (. => V |-> L) ... </env>
   rule
     <k> doBind(V, lit(M), Body) => Body ... </k>
     <env> ...  (. => V |-> !L:Loc) ... </env>
