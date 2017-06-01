@@ -75,7 +75,7 @@ module HASKELL-CORE-SYNTAX
 
   imports HASKELL-CORE-COMMON
   syntax HsId ::=
-    r"[a-zA-Z0-9\\_$#:\\[\\]'/\\-+=][a-zA-Z0-9\\_$#:\\[\\]'/\\-+=]*"
+    r"[a-zA-Z0-9\\_$#:\\[\\]'/\\-+=&<>][a-zA-Z0-9\\_$#:\\[\\]'/\\-+=&<>]*"
     [token]
 
 endmodule
