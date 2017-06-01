@@ -19,7 +19,7 @@ module HASKELL-CORE-EXECUTION
                       | tyabs(Expr, Map) // type abstraction closure
                       | thunk(Expr, Map)
                       | indirection(Loc)
-                      | litObj(Lit)
+                      | litObj(LitExpr)
 
   syntax KResult    ::= val(Loc) /* val should be used only
                                  with evaluated constants. */
@@ -196,7 +196,7 @@ module HASKELL-CORE-EXECUTION
     <env> ... (. => V |-> val(L)) ... </env>
   rule
     <k> doBind(V, lit(M), Body) => Body ... </k>
-    <env> ...  (. => V |-> !Loc) ... </env>
-    <store> ... (. => !Loc |-> litObj(M)) ... </store>
+    <env> ...  (. => V |-> !L:Loc) ... </env>
+    <store> ... (. => !L |-> litObj(lit(M))) ... </store>
 
 endmodule
