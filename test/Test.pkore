@@ -1,0 +1,1 @@
+app(lam(tmVar(<type>, name(foo)), var(tmVar(<type>, name(foo)))), lit(litInt(17, <type>)))
