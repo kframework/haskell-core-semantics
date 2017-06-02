@@ -170,8 +170,8 @@ prVisibilityFlag Invisible = "invisible"
 
 prType :: Flags -> Type -> String
 prType flg ty'
-  | shouldOmitTypes flg && shouldUseColor flg = "\x1b[31m<type>\x1b[0m"
-  | shouldOmitTypes flg = "<type>"
+  | shouldOmitTypes flg && shouldUseColor flg = "\x1b[31m[type omitted]\x1b[0m"
+  | shouldOmitTypes flg = "[type omitted]"
   | otherwise =
       case ty' of
         TyVarTy x -> prVar flg x
