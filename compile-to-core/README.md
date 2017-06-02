@@ -16,7 +16,7 @@ nonRec(tmVar(tyConApp(algTyCon(Integer, tyConApp(primTyCon(TYPE), tyConApp(promD
 
 You can use the `--no-types` flag to omit the type information. For `one`, this results in the following:
 ```haskell
-nonRec(tmVar(<type>, r1), litInt(1, <type>))
+nonRec(tmVar([type omitted], r1), litInt(1, [type omitted]))
 ```
 
 ## The output format
