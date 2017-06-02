@@ -1,0 +1,10 @@
+<generatedTop>
+  <k> val ( 1 ) ~> restoreEnv ( .Map ) </k>
+  <store>
+    1 |-> closure ( name ( foo ) , var ( tmVar ( [type omitted] , name ( foo ) ) ) , .Map )
+  </store>
+  <env>
+    name ( foo ) |-> 1
+  </env>
+  <exit-code> 0 </exit-code>
+</generatedTop>
