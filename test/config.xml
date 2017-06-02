@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2017 K Team. All Rights Reserved. -->
+
+<tests>
+  <test
+    definition="../src/haskell-core.k"
+    programs="pkore-samples"
+    extension="pkore"
+    results="pkore-samples">
+    <kompile-option name="--syntax-module" value="HASKELL-CORE-SYNTAX"/>
+  </test>
+</tests>
