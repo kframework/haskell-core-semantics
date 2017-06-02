@@ -50,7 +50,7 @@ module HASKELL-CORE-COMMON
                     | "sourceNote"  "(" ")"
 
   /* TODO: type system will eventually be implemented. */
-  syntax Type     ::= "[type omitted]"
+  syntax Type     ::= "<type>"
 
   syntax Coercion ::= "TODO"
 
@@ -65,7 +65,8 @@ module HASKELL-CORE-COMMON
                     | "tick" "(" Tickish "," Expr ")"
                     | "type" "(" Type ")"
                     | Coercion
-  syntax LitExpr ::= "lit"  "(" Lit ")"
+
+  syntax LitExpr  ::= "lit"  "(" Lit ")"
 
   syntax SeqBind ::= Binding | Binding SeqBind [klabel(bindings)]
 
@@ -79,3 +80,5 @@ module HASKELL-CORE-SYNTAX
     [token]
 
 endmodule
+
+↔
