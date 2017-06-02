@@ -80,8 +80,8 @@ module HASKELL-CORE-EXECUTION
      <k> force(E, Env, L) => update(E, L) ~> restoreEnv(EOld) ... </k>
      <env> EOld => Env </env>
   rule
-      <k> update(val(L'), L) => . ... </k>
-      <store> ... L |-> (_ => indirection(L')) ... </store>
+    <k> update(val(L'), L) => . ... </k>
+    <store> ... L |-> (_ => indirection(L')) ... </store>
 
   // App
   rule
