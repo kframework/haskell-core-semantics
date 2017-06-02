@@ -1,3 +1,3 @@
-let(nonRec(tmVar(<type>, name(foo)),
-           lam(tmVar(<type>, name(foo)), var(tmVar(<type>, name(foo))))),
-    var(tmVar(<type>, name(foo))))
+let(nonRec(tmVar([type omitted], name(foo)),
+           lam(tmVar([type omitted], name(foo)), var(tmVar([type omitted], name(foo))))),
+    var(tmVar([type omitted], name(foo))))

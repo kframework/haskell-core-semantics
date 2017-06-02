@@ -1,7 +1,7 @@
 case(
   lit(machStr("seventeen")),
-  tmVar(<type>, name(x)),
-  <type>,
+  tmVar([type omitted], name(x)),
+  [type omitted],
   altCons(
     alt(
       defaultAlt(),

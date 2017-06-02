@@ -1,1 +1,1 @@
-app(lam(tmVar(<type>, name(foo)), var(tmVar(<type>, name(foo)))), lit(litInt(17, <type>)))
+app(lam(tmVar([type omitted], name(foo)), var(tmVar([type omitted], name(foo)))), lit(litInt(17, [type omitted])))
