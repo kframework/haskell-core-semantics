@@ -50,7 +50,7 @@ module HASKELL-CORE-COMMON
                     | "sourceNote"  "(" ")"
 
   /* TODO: type system will eventually be implemented. */
-  syntax Type     ::= "<type>"
+  syntax Type     ::= "[type omitted]"
 
   syntax Coercion ::= "TODO"
 
@@ -80,5 +80,3 @@ module HASKELL-CORE-SYNTAX
     [token]
 
 endmodule
-
-↔
