@@ -1,11 +1,11 @@
 <generatedTop>
-  <k> val ( 2 ) ~> restoreEnv ( .Map ) </k>
+  <k> val ( 2 ) </k>
   <store>
     1 |-> closure ( name ( foo ) , var ( tmVar ( [type omitted] , name ( foo ) ) ) , .Map )
     2 |-> litObj ( lit ( litInt ( 17 , [type omitted] ) ) )
   </store>
   <env>
-    name ( foo ) |-> 2
+    .Map
   </env>
   <exit-code> 0 </exit-code>
 </generatedTop>
