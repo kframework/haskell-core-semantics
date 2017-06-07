@@ -10,16 +10,12 @@ sudo: false
 
 before_install:
   - cd $HOME
-  - if [ ! -d k ]; then git clone https://github.com/kframework/k/; fi
+  - git clone https://github.com/kframework/k/
   - cd k
+  - ls
   - mvn package -DskipTests;
   - export PATH=$PATH:$(pwd)/k-distribution/target/release/k/bin
   - cd $TRAVIS_BUILD_DIR
-
-cache:
-  directories:
-    - $HOME/k
-    - $HOME/.m2
 
 install:
   - make
@@ -27,6 +23,11 @@ install:
 script:
   - cd test
   - ktest config.xml
+
+cache:
+  directories:
+  - $HOME/k
+  - $HOME/.m2
 
 notifications:
   email:
