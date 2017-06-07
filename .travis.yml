@@ -16,11 +16,6 @@ before_install:
   - export PATH=$PATH:$(pwd)/k-distribution/target/release/k/bin
   - cd $TRAVIS_BUILD_DIR
 
-cache:
-  directories:
-    - $HOME/k
-    - $HOME/.m2
-
 install:
   - make
 
