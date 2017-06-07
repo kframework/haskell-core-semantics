@@ -192,8 +192,12 @@ module HASKELL-CORE-EXECUTION
 
   rule <k> restoreEnv(Env) => . ... </k>
        <env> _ => Env </env>
+  rule <k> val(I) ~> restoreEnv(Env) => val(I) ... </k>
+       <env> _ => Env </env>
+
   rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
        <env> Env </env>
+
   // Temporarily modify the environment to handle `doBind`.
   rule
     <k> doBind(V, val(L), Body) => Body ... </k>
