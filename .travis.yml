@@ -23,6 +23,11 @@ script:
   - cd test
   - ktest config.xml
 
+cache:
+  directories:
+  - $HOME/k
+  - $HOME/.m2
+
 notifications:
   email:
     recipients:
