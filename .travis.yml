@@ -1,0 +1,37 @@
+language: java
+
+dist: trusty
+
+branches:
+  only:
+    - master
+
+sudo: false
+
+before_install:
+  - cd $HOME
+  - if [ ! -d k ]; then git clone https://github.com/kframework/k/; fi
+  - cd k
+  - mvn package -DskipTests;
+  - export PATH=$PATH:$(pwd)/k-distribution/target/release/k/bin
+  - cd $TRAVIS_BUILD_DIR
+
+cache:
+  directories:
+    - $HOME/k
+    - $HOME/.m2
+
+install:
+  - make
+
+script:
+  - cd test
+  - ktest config.xml
+
+notifications:
+  email:
+    recipients:
+    - tosun2@illinois.edu
+    - lpena7@illinois.edu
+    on_success: always # default: change
+    on_failure: always # default: always
