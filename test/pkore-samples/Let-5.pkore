@@ -1,0 +1,5 @@
+let(nonRec(tmVar([type omitted], name(f)),
+           lam(tmVar([type omitted], name(x)), var(tmVar([type omitted], name(x))))),
+    lam(tmVar([type omitted], name(z)),
+        app(var(tmVar([type omitted], name(f))),
+            var(tmVar([type omitted], name(z))))))

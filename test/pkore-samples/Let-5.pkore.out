@@ -1,0 +1,1 @@
+<generatedTop> <k> val ( 2 ) </k> <store> 1 |-> thunk ( lam ( tmVar ( [type omitted] , name ( x ) ) , var ( tmVar ( [type omitted] , name ( x ) ) ) ) , .Map ) 2 |-> closure ( name ( z ) , app ( var ( tmVar ( [type omitted] , name ( f ) ) ) , var ( tmVar ( [type omitted] , name ( z ) ) ) ) , name ( f ) |-> 1 ) </store> <env> .Map </env> <exit-code> 0 </exit-code> </generatedTop>
