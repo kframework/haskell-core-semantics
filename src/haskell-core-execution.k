@@ -86,6 +86,7 @@ module HASKELL-CORE-EXECUTION
   // App
   rule
     <k> app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ... </k>
+    /* TODO: This seems to be wrong. */
     <env> EOld => Env </env>
     <store> ... L |-> closure(R, Body, Env) ... </store>
   rule
