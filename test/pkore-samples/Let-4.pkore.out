@@ -1,0 +1,13 @@
+<generatedTop>
+  <k> val ( 2 ) </k>
+  <store>
+    1 |-> closure ( name ( x ) , var ( tmVar ( [type omitted] , name ( x ) ) ) , .Map )
+    2 |-> closure ( name ( z ) , var ( tmVar ( [type omitted] , name ( z ) ) ) , .Map )
+  </store>
+  <env>
+    .Map
+  </env>
+  <exit-code>
+    0
+  </exit-code>
+</generatedTop>
