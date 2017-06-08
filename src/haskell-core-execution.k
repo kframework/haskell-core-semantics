@@ -89,10 +89,15 @@ module HASKELL-CORE-EXECUTION
 
   // App
   rule
-    <k> app(val(L), E2)
-        => doBindMap(R, E2, Env, Body) ~> restoreEnv(EOld) ... </k>
-    <env> EOld </env>
-    <store> ... L |-> closure(R, Body, Env) ... </store>
+    <k>
+      app(val(L), E2) => doBindMap(R, E2, Env, Body) ~> restoreEnv(EOld) ...
+    </k>
+    <env>
+      EOld
+    </env>
+    <store>
+      ... L |-> closure(R, Body, Env) ...
+    </store>
   rule
     <k> app(val(L), _) => Body ~> restoreEnv(EOld) ... </k>
     <env> EOld => Env </env>
