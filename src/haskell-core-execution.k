@@ -29,7 +29,8 @@ module HASKELL-CORE-EXECUTION
 
   // doBind: binds Id to Expr (for evaluation in K) without forcing
   // the evaluation of Expr.
-  syntax K          ::= doBind(Name, Expr, K) [strict(2)]
+  syntax K          ::= doBind(Name, Expr, K)
+                      | doBindMap(Name, Expr, Map, K)
                       | bindVals(Names, Locs, K)
                       | scope(K)
                       | restoreEnv(Map) // environment to reinstate
@@ -82,12 +83,15 @@ module HASKELL-CORE-EXECUTION
   rule
     <k> update(val(L'), L) => . ... </k>
     <store> ... L |-> (_ => indirection(L')) ... </store>
+  rule
+    <k> update(lit(M), L) => . ... </k>
+    <store> ... L |-> (_ => litObj(lit(M))) ... </store>
 
   // App
   rule
-    <k> app(val(L), E2) => doBind(R, E2, Body) ~> restoreEnv(EOld) ... </k>
-    /* TODO: This seems to be wrong. */
-    <env> EOld => Env </env>
+    <k> app(val(L), E2)
+        => doBindMap(R, E2, Env, Body) ~> restoreEnv(EOld) ... </k>
+    <env> EOld </env>
     <store> ... L |-> closure(R, Body, Env) ... </store>
   rule
     <k> app(val(L), _) => Body ~> restoreEnv(EOld) ... </k>
@@ -199,13 +203,27 @@ module HASKELL-CORE-EXECUTION
   rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
        <env> Env </env>
 
+  syntax Bool ::= isExpVar(Expr) [function]
+
+  rule isExpVar(var(_)) => true
+  rule isExpVar(_)      => false [owise]
+
+  rule
+    <k> doBind(V, E, Body) => doBindMap(V, E, Env, Body) ... </k>
+    <env> Env </env>
+
   // Temporarily modify the environment to handle `doBind`.
   rule
-    <k> doBind(V, val(L), Body) => Body ... </k>
-    <env> ... (. => V |-> L) ... </env>
+    <k> doBindMap(V, E, ENew, Body) => Body ... </k>
+    <env> Env => ENew[V <- !L:Int] </env>
+    <store> ... .Map => !L |-> thunk(E, Env) ... </store>
+    requires notBool isExpVar(E)
   rule
-    <k> doBind(V, lit(M), Body) => Body ... </k>
-    <env> ...  (. => V |-> !L:Loc) ... </env>
-    <store> ... (. => !L |-> litObj(lit(M))) ... </store>
+    <k> doBindMap(V, lit(M), ENew, Body) => Body ... </k>
+    <env> Env => ENew[V <- !L:Int] </env>
+    <store> ... .Map => !L |-> litObj(lit(M)) ... </store>
+  rule
+    <k> doBindMap(V, var(tmVar(_, R)), ENew, Body) => Body ... </k>
+    <env> Env:Map (R |-> L) => ENew[V <- L] </env>
 
 endmodule
