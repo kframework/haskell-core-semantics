@@ -67,6 +67,10 @@ module HASKELL-CORE-EXECUTION
     <env> ... R |-> L ... </env>
   rule
     <k> var(tmVar(_, R)) => val(L) ... </k>
+    <store> ... L |-> tyabs(_, _) ... </store>
+    <env> ... R |-> L ... </env>
+  rule
+    <k> var(tmVar(_, R)) => val(L) ... </k>
     <store> ... L |-> litObj(_) ... </store>
     <env> ... R |-> L ... </env>
   rule // could shortcut the store entry also
