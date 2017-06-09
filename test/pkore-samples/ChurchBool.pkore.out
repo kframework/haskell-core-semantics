@@ -1,11 +1,28 @@
 <generatedTop>
-  <k>
-  </k>
+  <k> val ( 22 ) </k>
   <store>
+    1 |-> indirection ( 16 )
+    2 |-> indirection ( 10 )
+    3 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( p ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) ) ) ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    4 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( p ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) ) ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    5 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( p ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    6 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( p ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    7 |-> tyabs ( lam ( tmVar ( [type omitted] , name ( p ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    8 |-> closure ( name ( p ) , app ( app ( var ( tmVar ( [type omitted] , name ( p ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( false ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+    9 |-> indirection ( 12 )
+   10 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( x ) ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( x ) ) ) ) ) ) , name ( false ) |-> 1 )
+   11 |-> tyabs ( lam ( tmVar ( [type omitted] , name ( x ) ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( x ) ) ) ) ) , name ( false ) |-> 1 )
+   12 |-> closure ( name ( x ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( x ) ) ) ) , name ( false ) |-> 1 )
+   13 |-> indirection ( 18 )
+   14 |-> closure ( name ( y ) , var ( tmVar ( [type omitted] , name ( x ) ) ) , name ( false ) |-> 1 name ( x ) |-> 13 )
+   15 |-> thunk ( app ( app ( var ( tmVar ( [type omitted] , name ( true ) ) ) , type ( [type omitted] ) ) , type ( [type omitted] ) ) , name ( false ) |-> 1 name ( p ) |-> 12 name ( true ) |-> 2 )
+   16 |-> tyabs ( lam ( tyVar ( [type omitted] , name ( t ) ) , lam ( tmVar ( [type omitted] , name ( x ) ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( y ) ) ) ) ) ) , .Map )
+   17 |-> tyabs ( lam ( tmVar ( [type omitted] , name ( x ) ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( y ) ) ) ) ) , .Map )
+   18 |-> closure ( name ( x ) , lam ( tmVar ( [type omitted] , name ( y ) ) , var ( tmVar ( [type omitted] , name ( y ) ) ) ) , .Map )
+   19 |-> thunk ( lit ( litInt ( 1 , [type omitted] ) ) , name ( false ) |-> 1 name ( true ) |-> 2 )
+   21 |-> closure ( name ( y ) , var ( tmVar ( [type omitted] , name ( y ) ) ) , name ( x ) |-> 19 )
+   22 |-> litObj ( lit ( litInt ( 2 , [type omitted] ) ) )
   </store>
-  <env>
-    name ( false ) |-> 1
-    name ( true )  |-> 10
-  </env>
+  <env> .Map </env>
   <exit-code> 0 </exit-code>
 </generatedTop>
