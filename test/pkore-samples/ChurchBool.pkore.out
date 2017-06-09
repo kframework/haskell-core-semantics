@@ -1,0 +1,11 @@
+<generatedTop>
+  <k>
+  </k>
+  <store>
+  </store>
+  <env>
+    name ( false ) |-> 1
+    name ( true )  |-> 10
+  </env>
+  <exit-code> 0 </exit-code>
+</generatedTop>
