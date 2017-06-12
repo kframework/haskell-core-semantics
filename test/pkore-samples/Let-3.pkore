@@ -3,4 +3,4 @@ let(nonRec(tmVar([type omitted], name(foo)),
                    lam(tmVar([type omitted], name(b)),
                        app(var(tmVar([type omitted], name(a))), var(tmVar([type omitted], name(b)))))),
                lam(tmVar([type omitted], name(x)), var(tmVar([type omitted], name(x)))))),
-    app(var(tmVar([type omitted], name(foo))), lit(litInt(17, [type omitted]))))
+    app(var(tmVar([type omitted], name(foo))), lit(litInt(3, [type omitted]))))
