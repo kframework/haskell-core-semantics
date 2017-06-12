@@ -216,8 +216,6 @@ module HASKELL-CORE-EXECUTION
        <env> _ => Env </env>
   rule <k> val(I) ~> restoreEnv(Env) => val(I) ... </k>
        <env> _ => Env </env>
-  rule <k> litObj(I) ~> restoreEnv(Env) => litObj(I) ... </k>
-       <env> _ => Env </env>
 
   rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
        <env> Env </env>
