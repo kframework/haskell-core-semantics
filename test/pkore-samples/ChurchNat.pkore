@@ -1,0 +1,14 @@
+nonRec(tmVar([type omitted], name($trModule)), app(app(var(tmVar([type omitted], name(Module))), app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("main")))), app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("ChurchNat")))))
+
+nonRec(tmVar([type omitted], name(zero)), lam(tyVar([type omitted], name(t)), lam(tyVar([type omitted], name(t)), lam(tmVar([type omitted], name(s)), lam(tmVar([type omitted], name(z)), var(tmVar([type omitted], name(z))))))))
+
+nonRec(tmVar([type omitted], name(one)), lam(tyVar([type omitted], name(t)), lam(tyVar([type omitted], name(t)), lam(tmVar([type omitted], name(s)), lam(tmVar([type omitted], name(z)), app(var(tmVar([type omitted], name(s))), var(tmVar([type omitted], name(z)))))))))
+
+nonRec(tmVar([type omitted], name(succ)), lam(tyVar([type omitted], name(t)), lam(tyVar([type omitted], name(t)), lam(tyVar([type omitted], name(t)), lam(tmVar([type omitted], name(n)), lam(tmVar([type omitted], name(s)), lam(tmVar([type omitted], name(z)), app(var(tmVar([type omitted], name(s))), app(app(var(tmVar([type omitted], name(n))), var(tmVar([type omitted], name(s)))), var(tmVar([type omitted], name(z))))))))))))
+
+nonRec(tmVar([type omitted], name(two)), lam(tyVar([type omitted], name(t)), app(app(app(app(var(tmVar([type omitted], name(succ))), type([type omitted])), type([type omitted])), type([type omitted])), app(app(var(tmVar([type omitted], name(one))), type([type omitted])), type([type omitted])))))
+
+nonRec(tmVar([type omitted], name(three)), lam(tyVar([type omitted], name(t)), app(app(app(app(var(tmVar([type omitted], name(succ))), type([type omitted])), type([type omitted])), type([type omitted])), app(var(tmVar([type omitted], name(two))), type([type omitted])))))
+
+app(app(app(var(tmVar([type omitted], name(three))), type([type omitted])), lam(tmVar([type omitted], name(x)), var(tmVar([type omitted], name(x))))), lit(litInt(0, [type omitted])))
+
