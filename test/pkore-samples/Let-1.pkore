@@ -1,2 +1,7 @@
-let(nonRec(tmVar([type omitted], name(foo)), lit(machInt(17))),
+nonRec(tmVar([type omitted], name($trModule)),
+app(app(var(tmVar([type omitted],
+name(Module))), app(var(tmVar([type omitted], name(TrNameS))),
+lit(machStr("main")))), app(var(tmVar([type omitted], name(TrNameS))),
+
+lit(machStr("Foo")))))let(nonRec(tmVar([type omitted], name(foo)), lit(machInt(17))),
     var(tmVar([type omitted], name(foo))))
