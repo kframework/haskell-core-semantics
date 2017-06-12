@@ -216,6 +216,8 @@ module HASKELL-CORE-EXECUTION
        <env> _ => Env </env>
   rule <k> val(I) ~> restoreEnv(Env) => val(I) ... </k>
        <env> _ => Env </env>
+  rule <k> litObj(I) ~> restoreEnv(Env) => litObj(I) ... </k>
+       <env> _ => Env </env>
 
   rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
        <env> Env </env>
@@ -242,5 +244,10 @@ module HASKELL-CORE-EXECUTION
   rule
     <k> doBindMap(V, var(tmVar(_, R)), ENew, Body) => Body ... </k>
     <env> Env:Map (R |-> L) => ENew[V <- L] </env>
+
+  rule
+    <k> val(L) => O </k>
+    <store> Sto:Map (L |-> O) => .Map </store>
+    <env> _ => .Map </env>
 
 endmodule
