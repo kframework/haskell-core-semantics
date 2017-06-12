@@ -1,0 +1,17 @@
+nonRec(tmVar([type omitted], name($trModule)),
+       app(app(var(tmVar([type omitted], name(Module))),
+               app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("main")))),
+           app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("Foo")))))
+
+nonRec(tmVar([type omitted], name($tc'S)),
+       app(app(app(app(var(tmVar([type omitted], name(TyCon))),
+                       lit(machWord(840995842703453192))),
+                   lit(machWord(4820762953810517947))),
+           var(tmVar([type omitted], name($trModule)))),
+           app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("'S")))))
+
+nonRec(tmVar([type omitted], name($tc'Z)), app(app(app(app(var(tmVar([type omitted], name(TyCon))), lit(machWord(10523165340320560180))), lit(machWord(417491120088537590))), var(tmVar([type omitted], name($trModule)))), app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("'Z")))))
+
+nonRec(tmVar([type omitted], name($tcNat)), app(app(app(app(var(tmVar([type omitted], name(TyCon))), lit(machWord(4761440953225500235))), lit(machWord(11518103264329045245))), var(tmVar([type omitted], name($trModule)))), app(var(tmVar([type omitted], name(TrNameS))), lit(machStr("Nat")))))
+
+app(var(tmVar([type omitted], name($tc'S))), var(tmVar([type omitted], name($tc'Z))))
