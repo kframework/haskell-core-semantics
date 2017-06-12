@@ -40,6 +40,14 @@ module HASKELL-CORE-EXECUTION
   syntax Names      ::= List{Name, ";"} [klabel(nameList)]
   syntax Names      ::= getTmVars(VarList) [function]
 
+  syntax K ::= evalBind(SeqBind, Expr)                               [function]
+  rule evalBind(nonRec(tmVar(_, R), E1), E2:Expr)
+       => doBind(R, E1, E2)
+  rule evalBind(nonRec(tmVar(_, R), E1) BS:SeqBind, E2:Expr)
+       => doBind(R, E1, evalBind(BS, E2))
+
+  rule BS:SeqBind E:Expr => evalBind(BS, E)
+
   // Get Ids out of VarList
   rule getTmVars(VarEmpty)                   => .Names
   rule getTmVars(VarCons(tmVar(_, N), Vars)) => N; getTmVars(Vars)

@@ -68,7 +68,10 @@ module HASKELL-CORE-COMMON
 
   syntax LitExpr  ::= "lit"  "(" Lit ")"
 
-  syntax SeqBind ::= Binding | Binding SeqBind [klabel(bindings)]
+  syntax SeqBind ::= Binding
+                   | Binding SeqBind                         [klabel(bindings)]
+
+  syntax Program ::= Expr | SeqBind Expr
 
 endmodule
 
