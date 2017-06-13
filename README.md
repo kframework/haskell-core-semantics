@@ -21,9 +21,10 @@ of Haskell Core. To find out how to experiment with this tool, you can run
 ### Running Haskell
 
 You can use `script/krunhaskell.sh` to directly run Haskell code. First run
-`./setup.sh` to configure the environment variable `HASKELL_CORE_SEMANTICS_DIR`
-that will be needed. This will also alias `krunhaskell` to the absolute path
-of `script/krunhaskell.sh` so that you can use it anywhere.
+`source setup.sh` to configure the environment variable
+`HASKELL_CORE_SEMANTICS_DIR` that will be needed. This will also alias
+`krunhaskell` to the absolute path of `script/krunhaskell.sh` so that you can
+use it anywhere.
 
 In a Haskell file `Foo.hs` that you want to run, designate an expression by
 adding a top-level declaration with the definiendum `result`; the definiens of
