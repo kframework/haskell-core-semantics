@@ -8,3 +8,6 @@ foo = NTrue
 neg :: NBool -> NBool
 neg NTrue  = NFalse
 neg NFalse = NTrue
+
+result :: NBool
+result = neg NTrue
