@@ -33,8 +33,10 @@ errorTODO = error "TODO"
 type ShouldOmitTypes = Bool
 
 data Flags = Flags
-  { shouldOmitTypes :: ShouldOmitTypes
-  , shouldUseColor  :: Bool }
+  { shouldOmitTypes   :: ShouldOmitTypes
+  , shouldUseColor    :: Bool
+  , shouldStripResult :: Bool
+  }
 
 args :: [String] -> String
 args ss = "(" ++ intercalate ", " ss ++ ")"
@@ -217,7 +219,12 @@ prTyLit (NumTyLit n)  = "numTyLit" ++ args [show n]
 prTyLit (StrTyLit fs) = "strTyLit" ++ args [unpackFS fs]
 
 prBinding :: Flags -> Bind CoreBndr -> String
-prBinding flg (NonRec b e) = "nonRec" ++ args [prVar flg b, prExpr flg e]
+prBinding flg (NonRec b e) =
+  let definiendum = prVar flg b in
+    case definiendum of
+      "tmVar([type omitted], name(result))" | shouldStripResult flg
+        -> prExpr flg e
+      _ ->  "nonRec" ++ args [definiendum, prExpr flg e]
 prBinding flg (Rec bs) =
   let prBindingList [] = "emptyBind"
       prBindingList ((b, e):bs') =
@@ -257,15 +264,20 @@ compileToCore modName = runGhc (Just libdir) $ do
     return $ mg_binds . coreModule $ ds
 
 data Args = Args
-  { moduleName :: String
-  , noTypes    :: Bool
-  , colorful   :: Bool
-  , outFile    :: Maybe String }
+  { moduleName  :: String
+  , noTypes     :: Bool
+  , stripResult :: Bool
+  , colorful    :: Bool
+  , outFile     :: Maybe String }
 
 argParse :: Parser Args
 argParse = Args
         <$> argument str (metavar "MODULE")
         <*> switch (long "no-types" <> help "Omit type information")
+        <*> switch (  long "strip-result"
+                   <> help "If there is a top-level declaration of a \
+                            \definiendum named `result`, strip its definiens \
+                            \out as a naked expression.")
         <*> switch (long "color" <> short 'c' <> help "Enable colorful output")
         <*> optional (strOption
               (  long "output-file"
@@ -274,8 +286,8 @@ argParse = Args
               <> metavar "OUTFILE"))
 
 runWithArgs :: Args -> IO ()
-runWithArgs (Args mn st clr mybfname) = do
-  let flg = Flags st clr
+runWithArgs (Args mn nt srd clr mybfname) = do
+  let flg = Flags nt clr srd
   c <- compileToCore mn
   let output = intercalate "\n\n" (prBinding flg <$> c)
   case mybfname of
