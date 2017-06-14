@@ -14,7 +14,7 @@ import           Data.Semigroup        ((<>))
 import           FastString            (unpackFS)
 import           GHC
 import           GHC.Paths             (libdir)
-import           HscTypes              (mg_binds)
+import           HscTypes              (mg_binds, mg_tcs)
 import           Literal
 import           Options.Applicative
 import qualified Outputable            as OP
@@ -254,15 +254,21 @@ prExpr flg (Tick tid e) = "tick" ++ args [prTickish tid, prExpr flg e]
 prExpr flg (Type ty) = "type" ++ args [prType flg ty]
 prExpr flg (Coercion co) = "coerce" ++ args [prCoercion flg co]
 
-compileToCore :: String -> IO [CoreBind]
-compileToCore modName = runGhc (Just libdir) $ do
+getCoreBinds :: DesugaredModule -> IO [CoreBind]
+getCoreBinds dsm = return $ mg_binds . coreModule $ dsm
+
+getTyCons :: DesugaredModule -> IO [TyCon]
+getTyCons dsm = return $ mg_tcs . coreModule $ dsm
+
+getDesugaredModule :: String -> IO DesugaredModule
+getDesugaredModule modName = runGhc (Just libdir) $ do
     _ <- setSessionDynFlags =<< getSessionDynFlags
     target <- guessTarget (modName ++ ".hs") Nothing
     setTargets [target]
     _ <- load LoadAllTargets
-    ds <- desugarModule <=< typecheckModule <=<
-            parseModule <=< getModSummary $ mkModuleName modName
-    return $ mg_binds . coreModule $ ds
+    desugarModule <=< typecheckModule
+                  <=< parseModule
+                  <=< getModSummary $ mkModuleName modName
 
 data Args = Args
   { moduleName  :: String
@@ -289,8 +295,12 @@ argParse = Args
 runWithArgs :: Args -> IO ()
 runWithArgs (Args mn nt srd clr mybfname) = do
   let flg = Flags nt clr srd
-  c <- compileToCore mn
-  let output = intercalate "\n\n" (prBinding flg <$> c)
+  dsm <- getDesugaredModule mn
+  cbs <- getCoreBinds dsm
+  tcs <- getTyCons dsm
+  let tcsStr = intercalate "\n\n" (prTyCon flg <$> tcs)
+  let bindingsStr = intercalate "\n\n" (prBinding flg <$> cbs)
+  let output = tcsStr ++ "\n\n" ++ bindingsStr
   case mybfname of
     Just fname -> writeFile fname output
     Nothing    -> putStrLn output
