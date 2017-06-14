@@ -260,7 +260,8 @@ compileToCore modName = runGhc (Just libdir) $ do
     target <- guessTarget (modName ++ ".hs") Nothing
     setTargets [target]
     _ <- load LoadAllTargets
-    ds <- desugarModule <=< typecheckModule <=< parseModule <=< getModSummary $ mkModuleName modName
+    ds <- desugarModule <=< typecheckModule <=<
+            parseModule <=< getModSummary $ mkModuleName modName
     return $ mg_binds . coreModule $ ds
 
 data Args = Args
