@@ -85,6 +85,7 @@ prAlgTyConRhs (DataTyCon dcs _) =
   "algTyConRhs" ++ args [prList "DataCon" $ prDataCon <$> dcs]
 -- The omitted information in the following case might be needed in the future.
 prAlgTyConRhs (AbstractTyCon _) = "abstractTyCon()"
+prAlgTyConRhs (NewTyCon dc _ _ _) = "newTyCon" ++ args [prDataCon dc]
 prAlgTyConRhs _ = error "Many cases of prAlgTyConRhs not implemented yet."
 
 prTyCon :: Flags -> TyCon -> String
