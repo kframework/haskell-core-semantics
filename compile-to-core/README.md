@@ -118,11 +118,25 @@ There are 4 operators of sort `Tickish`.
   sourceNote  : ⟶ Tickish
 ```
 
+### `Arity`
+
+`Arity` is an `Integer`.
+
 ### `DataCon`
 
 There is one operator of sort `DataCon`.
 ```
-  dataCon : Name ⟶ DataCon
+  dataCon : Name Arity ⟶ DataCon
+```
+
+### `AlgTyConRhs`
+
+There are 4 operators of sort `AlgTyConRhs`.
+
+```
+  dataTyCon     : DataConList ⟶ AlgTyConRhs
+  abstractTyCon : ⟶ AlgTyConRhs
+  newTyCon      : DataCon ⟶ AlgTyConRhs
 ```
 
 ### `AltCon`
