@@ -82,7 +82,7 @@ prAltCon _   DEFAULT      = "defaultAlt()"
 
 prAlgTyConRhs :: AlgTyConRhs -> String
 prAlgTyConRhs (DataTyCon dcs _) =
-  "algTyConRhs" ++ args [prList "DataCon" $ prDataCon <$> dcs]
+  "dataTyCon" ++ args [prList "DataCon" $ prDataCon <$> dcs]
 -- The omitted information in the following case might be needed in the future.
 prAlgTyConRhs (AbstractTyCon _) = "abstractTyCon()"
 prAlgTyConRhs (NewTyCon dc _ _ _) = "newTyCon" ++ args [prDataCon dc]
@@ -319,9 +319,9 @@ runWithArgs (Args mn nt srd clr mybfname) = do
   dsm <- getDesugaredModule mn
   cbs <- getCoreBinds dsm
   tcs <- getTyCons dsm
-  let tcsStr = intercalate "\n\n" (prTyCon flg <$> tcs)
+  let tcsStr      = intercalate "\n\n" (prTyCon flg <$> tcs)
   let bindingsStr = intercalate "\n\n" (prBinding flg <$> cbs)
-  let output = tcsStr ++ "\n\n" ++ bindingsStr
+  let output      = tcsStr ++ "\n\n" ++ bindingsStr
   case mybfname of
     Just fname -> writeFile fname output
     Nothing    -> putStrLn output
