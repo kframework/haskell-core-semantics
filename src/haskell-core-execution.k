@@ -46,6 +46,31 @@ module HASKELL-CORE-EXECUTION
        => doBind(R, E1, E2)
   rule evalDecl(nonRec(tmVar(_, R), E1) DS:SeqDecl, E2:Expr)
        => doBind(R, E1, evalDecl(DS, E2))
+  rule evalDecl(algTyCon(_, _, dataTyCon(DataConEmpty)), E:Expr)
+       => E
+  rule evalDecl(algTyCon(_, _, dataTyCon(DataConEmpty)) DS:SeqDecl, E:Expr)
+       => evalDecl(DS, E)
+  rule
+    <k>
+      evalDecl(algTyCon(TN, TAU, dataTyCon(DataConCons(dataCon(R, Ar), DCS))),
+               E:Expr)
+      => evalDecl(algTyCon(TN, TAU, dataTyCon(DCS)), E)
+      ...
+    </k>
+    <tenv>
+      M:Map => M[R <- Ar]
+    </tenv>
+  rule
+    <k>
+      evalDecl(algTyCon(TN, TAU, dataTyCon(DataConCons(dataCon(R, Ar), DCS)))
+               DS:SeqDecl,
+               E:Expr)
+      => evalDecl(algTyCon(TN, TAU, dataTyCon(DCS)) DS, E)
+      ...
+    </k>
+    <tenv>
+      M:Map => M[R <- Ar]
+    </tenv>
 
   rule DS:SeqDecl E:Expr => evalDecl(DS, E)
 
@@ -58,10 +83,13 @@ module HASKELL-CORE-EXECUTION
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
   configuration
-    <k> $PGM:K </k>
-    <store> .Map </store> // Loc |-> Object
-    <env> .Map </env>     // Name |-> Loc
-    <exit-code exit=""> 0::Int </exit-code>
+    <T>
+      <k> $PGM:K </k>
+      <store> .Map </store> // Loc  |-> Object
+      <env> .Map </env>     // Name |-> Loc
+      <tenv> .Map </tenv>   // Name |-> Arity
+      <exit-code exit=""> 0::Int </exit-code>
+    </T>
 
   /*------------------------------------------------------------
   RULES FOR VAR
