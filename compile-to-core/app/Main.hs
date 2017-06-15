@@ -2,7 +2,7 @@
 
 module Main where
 
-import           BasicTypes            (FunctionOrData (..))
+import           BasicTypes            (Arity, FunctionOrData (..))
 import           CoAxiom               (Branched, CoAxBranch (..), CoAxiom (..),
                                         CoAxiomRule (..), Role (..), cab_lhs,
                                         cab_rhs, co_ax_tc, fromBranches)
@@ -11,6 +11,7 @@ import           CoreSyn
 import           Data.ByteString.Char8 (unpack)
 import           Data.List             (intercalate)
 import           Data.Semigroup        ((<>))
+import           DataCon               (dataConSourceArity)
 import           FastString            (unpackFS)
 import           GHC
 import           GHC.Paths             (libdir)
@@ -18,14 +19,15 @@ import           HscTypes              (mg_binds, mg_tcs)
 import           Literal
 import           Options.Applicative
 import qualified Outputable            as OP
-import           TyCon                 (isAlgTyCon, isPromotedDataCon,
+import           TyCon                 (AlgTyConRhs (..), algTyConRhs,
+                                        isAlgTyCon, isPromotedDataCon,
                                         isPromotedDataCon_maybe, isTupleTyCon,
                                         tyConKind, tyConName)
 import           TyCoRep               (Coercion (..), LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
                                         UnivCoProvenance (..),
                                         VisibilityFlag (..))
-import           Var                   (Var, isId, isTyVar, varType, varName)
+import           Var                   (Var, isId, isTyVar, varName, varType)
 
 errorTODO :: a
 errorTODO = error "TODO"
@@ -61,13 +63,24 @@ prAlt flg (ac, bs, e) =
       es  = prExpr flg e
   in "alt" ++ args [acs, bss, es]
 
+prArity :: Arity -> String
+prArity x = "arity" ++ args [show x]
+
 prDataCon :: DataCon -> String
-prDataCon dc = "dataCon" ++ args [prName $ getName dc]
+prDataCon dc =
+  let arg1 = prName $ getName dc
+      arg2 = prArity $ dataConSourceArity dc
+  in "dataCon" ++ args [arg1, arg2]
 
 prAltCon :: Flags -> AltCon -> String
 prAltCon _   (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
 prAltCon flg (LitAlt lit) = "litAlt" ++ args [prLit flg lit]
 prAltCon _   DEFAULT      = "defaultAlt()"
+
+prAlgTyConRhs :: AlgTyConRhs -> String
+prAlgTyConRhs (DataTyCon dcs _) =
+  "algTyConRhs" ++ args [prList "DataCon" $ prDataCon <$> dcs]
+prAlgTyConRhs _ = error "Many cases of prAlgTyConRhs not implemented yet."
 
 prTyCon :: Flags -> TyCon -> String
 prTyCon flg tc
@@ -78,8 +91,10 @@ prTyCon flg tc
   | isTupleTyCon tc =
       "tupleTyCon()" ++ args [prType flg $ tyConKind tc]
   | isAlgTyCon tc =
-      let as = [prName (tyConName tc), prType flg $ tyConKind tc] in
-      "algTyCon" ++ args as
+      let arg1 = prName $ tyConName tc
+          arg2 = prType flg $ tyConKind tc
+          arg3 = prAlgTyConRhs $ algTyConRhs tc
+      in "algTyCon" ++ args [arg1, arg2, arg3]
   | isPrimTyCon tc = "primTyCon" ++ args [prName $ tyConName tc]
   | isPromotedDataCon tc =
       case isPromotedDataCon_maybe tc of
