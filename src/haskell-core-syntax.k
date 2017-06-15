@@ -33,7 +33,18 @@ module HASKELL-CORE-COMMON
   syntax HsId
   syntax Name     ::= "name" "(" HsId ")"
 
-  syntax DataCon  ::= "dataCon" "(" Name ")"
+  syntax Arity    ::= "arity" "(" Int ")"
+
+  syntax DataCon  ::= "dataCon" "(" Name "," Arity ")"
+
+  syntax DataConList ::= "DataConEmpty"
+                       | "DataConCons" "(" DataCon "," DataConList ")"
+
+  syntax AlgTyConRhs  ::= "dataTyCon" "(" DataConList ")"
+                        | "abstractTyCon" "(" ")"
+                        | "newTyCon" "(" DataCon ")"
+
+  syntax TyCon        ::= "algTyCon" "(" Name "," Type "," AlgTyConRhs ")"
 
   syntax AltCon   ::= "dataAlt" "(" DataCon ")"
                     | "litAlt" "(" Lit ")"
@@ -68,10 +79,12 @@ module HASKELL-CORE-COMMON
 
   syntax LitExpr  ::= "lit"  "(" Lit ")"
 
-  syntax SeqBind ::= Binding
-                   | Binding SeqBind                         [klabel(bindings)]
+  syntax Declaration ::= Binding | TyCon
 
-  syntax Program ::= Expr | SeqBind Expr
+  syntax SeqDecl     ::= Declaration
+                       | Declaration SeqDecl                    [klabel(decls)]
+
+  syntax Program ::= Expr | SeqDecl Expr
 
 endmodule
 
