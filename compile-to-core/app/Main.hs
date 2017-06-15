@@ -69,6 +69,9 @@ prArity x = "arity" ++ args [show x]
 prDataCon :: DataCon -> String
 prDataCon dc =
   let arg1 = prName $ getName dc
+      -- As we are ignoring types for now it is okay to just use
+      -- `dataConSourceArity`. In the future, however, we might need to use
+      -- `dataConOrigArgTys`, that gives the typed arity information.
       arg2 = prArity $ dataConSourceArity dc
   in "dataCon" ++ args [arg1, arg2]
 
@@ -80,6 +83,8 @@ prAltCon _   DEFAULT      = "defaultAlt()"
 prAlgTyConRhs :: AlgTyConRhs -> String
 prAlgTyConRhs (DataTyCon dcs _) =
   "algTyConRhs" ++ args [prList "DataCon" $ prDataCon <$> dcs]
+-- The omitted information in the following case might be needed in the future.
+prAlgTyConRhs (AbstractTyCon _) = "abstractTyCon()"
 prAlgTyConRhs _ = error "Many cases of prAlgTyConRhs not implemented yet."
 
 prTyCon :: Flags -> TyCon -> String
