@@ -160,7 +160,7 @@ There are 6 operators of sort `TyCon`.
   arrTyCon   : ⟶ TyCon
   synTyCon   : ⟶ TyCon
   tupleTyCon : ⟶ TyCon
-  algTyCon   : Name Type ⟶ TyCon
+  algTyCon   : Name Type AlgTyConRhs ⟶ TyCon
   primTyCon  : PrimTyCon ⟶ TyCon
 ```
 
