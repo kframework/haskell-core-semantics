@@ -40,7 +40,8 @@ module HASKELL-CORE-EXECUTION
   syntax Names      ::= List{Name, ";"} [klabel(nameList)]
   syntax Names      ::= getTmVars(VarList) [function]
 
-  syntax K ::= evalDecl(SeqDecl, Expr)                               [function]
+  /* TODO: Consider the possibility of this being tagged as a function. */
+  syntax K ::= evalDecl(SeqDecl, Expr)
 
   rule evalDecl(nonRec(tmVar(_, R), E1), E2:Expr)
        => doBind(R, E1, E2)
