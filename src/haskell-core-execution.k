@@ -21,9 +21,12 @@ module HASKELL-CORE-EXECUTION
                       | indirection(Loc)
                       | litObj(LitExpr)
 
+  syntax DataConVal ::= dc(Name)
+
   syntax KResult    ::= val(Loc) /* val should be used only
                                  with evaluated constants. */
                       | LitExpr
+                      | DataConVal
 
   syntax Expr       ::= KResult
 
@@ -116,6 +119,9 @@ module HASKELL-CORE-EXECUTION
     <store> ... L |-> indirection(L') ... </store>
     <env> ... R |-> (L => L') ... </env>
   rule
+    <k> var(tmVar(_, R)) => dc(R) ... </k>
+    <tenv> ...  R |-> arity(0) ... </tenv>
+  rule
     <k> (. => force(E, Env, L)) ~> var(tmVar(_, R)) ... </k>
     <store> ... L |-> thunk(E, Env) ... </store>
     <env> ... R |-> L ... </env>
@@ -134,12 +140,8 @@ module HASKELL-CORE-EXECUTION
     <k>
       app(val(L), E2) => doBindMap(R, E2, Env, Body) ~> restoreEnv(EOld) ...
     </k>
-    <env>
-      EOld
-    </env>
-    <store>
-      ... L |-> closure(R, Body, Env) ...
-    </store>
+    <env> EOld </env>
+    <store> ... L |-> closure(R, Body, Env) ... </store>
   rule
     <k> app(val(L), _) => Body ~> restoreEnv(EOld) ... </k>
     <env> EOld => Env </env>
