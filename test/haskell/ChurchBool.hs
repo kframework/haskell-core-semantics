@@ -1,7 +1,7 @@
 module ChurchBool where
 
-foo :: Integer
-foo =
+result :: Integer
+result =
   let true  = (\x -> \y -> x)
       false = (\x -> \y -> y)
       not p = p false true

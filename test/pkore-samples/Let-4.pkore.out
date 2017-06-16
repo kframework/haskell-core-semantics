@@ -1,1 +1,0 @@
-<generatedTop> <k> val ( 4 ) </k> <store> 1 |-> indirection ( 2 ) 2 |-> closure ( name ( x ) , var ( tmVar ( [type omitted] , name ( x ) ) ) , .Map ) 3 |-> indirection ( 4 ) 4 |-> closure ( name ( z ) , var ( tmVar ( [type omitted] , name ( z ) ) ) , name ( f ) |-> 2 ) </store> <env> .Map </env> <exit-code> 0 </exit-code> </generatedTop>

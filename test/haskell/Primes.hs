@@ -6,4 +6,4 @@ primes = filterPrime [2..]
           p : filterPrime [x | x <- xs, x `mod` p /= 0]
 
 
-upTo100 = take 100 primes
+result = take 100 primes
