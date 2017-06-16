@@ -2,7 +2,7 @@
 
 module Main where
 
-import           BasicTypes            (FunctionOrData (..))
+import           BasicTypes            (Arity, FunctionOrData (..))
 import           CoAxiom               (Branched, CoAxBranch (..), CoAxiom (..),
                                         CoAxiomRule (..), Role (..), cab_lhs,
                                         cab_rhs, co_ax_tc, fromBranches)
@@ -11,21 +11,23 @@ import           CoreSyn
 import           Data.ByteString.Char8 (unpack)
 import           Data.List             (intercalate)
 import           Data.Semigroup        ((<>))
+import           DataCon               (dataConSourceArity)
 import           FastString            (unpackFS)
 import           GHC
 import           GHC.Paths             (libdir)
-import           HscTypes              (mg_binds)
+import           HscTypes              (mg_binds, mg_tcs)
 import           Literal
 import           Options.Applicative
 import qualified Outputable            as OP
-import           TyCon                 (isAlgTyCon, isPromotedDataCon,
+import           TyCon                 (AlgTyConRhs (..), algTyConRhs,
+                                        isAlgTyCon, isPromotedDataCon,
                                         isPromotedDataCon_maybe, isTupleTyCon,
                                         tyConKind, tyConName)
 import           TyCoRep               (Coercion (..), LeftOrRight (..),
                                         TyBinder (..), TyLit (..), Type (..),
                                         UnivCoProvenance (..),
                                         VisibilityFlag (..))
-import           Var                   (Var, isId, isTyVar, varType, varName)
+import           Var                   (Var, isId, isTyVar, varName, varType)
 
 errorTODO :: a
 errorTODO = error "TODO"
@@ -61,13 +63,30 @@ prAlt flg (ac, bs, e) =
       es  = prExpr flg e
   in "alt" ++ args [acs, bss, es]
 
+prArity :: Arity -> String
+prArity x = "arity" ++ args [show x]
+
 prDataCon :: DataCon -> String
-prDataCon dc = "dataCon" ++ args [prName $ getName dc]
+prDataCon dc =
+  let arg1 = prName $ getName dc
+      -- As we are ignoring types for now it is okay to just use
+      -- `dataConSourceArity`. In the future, however, we might need to use
+      -- `dataConOrigArgTys`, that gives the typed arity information.
+      arg2 = prArity $ dataConSourceArity dc
+  in "dataCon" ++ args [arg1, arg2]
 
 prAltCon :: Flags -> AltCon -> String
 prAltCon _   (DataAlt dc) = "dataAlt" ++ args [prDataCon dc]
 prAltCon flg (LitAlt lit) = "litAlt" ++ args [prLit flg lit]
 prAltCon _   DEFAULT      = "defaultAlt()"
+
+prAlgTyConRhs :: AlgTyConRhs -> String
+prAlgTyConRhs (DataTyCon dcs _) =
+  "dataTyCon" ++ args [prList "DataCon" $ prDataCon <$> dcs]
+-- The omitted information in the following case might be needed in the future.
+prAlgTyConRhs (AbstractTyCon _) = "abstractTyCon()"
+prAlgTyConRhs (NewTyCon dc _ _ _) = "newTyCon" ++ args [prDataCon dc]
+prAlgTyConRhs _ = error "Many cases of prAlgTyConRhs not implemented yet."
 
 prTyCon :: Flags -> TyCon -> String
 prTyCon flg tc
@@ -78,8 +97,10 @@ prTyCon flg tc
   | isTupleTyCon tc =
       "tupleTyCon()" ++ args [prType flg $ tyConKind tc]
   | isAlgTyCon tc =
-      let as = [prName (tyConName tc), prType flg $ tyConKind tc] in
-      "algTyCon" ++ args as
+      let arg1 = prName $ tyConName tc
+          arg2 = prType flg $ tyConKind tc
+          arg3 = prAlgTyConRhs $ algTyConRhs tc
+      in "algTyCon" ++ args [arg1, arg2, arg3]
   | isPrimTyCon tc = "primTyCon" ++ args [prName $ tyConName tc]
   | isPromotedDataCon tc =
       case isPromotedDataCon_maybe tc of
@@ -254,14 +275,21 @@ prExpr flg (Tick tid e) = "tick" ++ args [prTickish tid, prExpr flg e]
 prExpr flg (Type ty) = "type" ++ args [prType flg ty]
 prExpr flg (Coercion co) = "coerce" ++ args [prCoercion flg co]
 
-compileToCore :: String -> IO [CoreBind]
-compileToCore modName = runGhc (Just libdir) $ do
+getCoreBinds :: DesugaredModule -> IO [CoreBind]
+getCoreBinds dsm = return $ mg_binds . coreModule $ dsm
+
+getTyCons :: DesugaredModule -> IO [TyCon]
+getTyCons dsm = return $ mg_tcs . coreModule $ dsm
+
+getDesugaredModule :: String -> IO DesugaredModule
+getDesugaredModule modName = runGhc (Just libdir) $ do
     _ <- setSessionDynFlags =<< getSessionDynFlags
     target <- guessTarget (modName ++ ".hs") Nothing
     setTargets [target]
     _ <- load LoadAllTargets
-    ds <- desugarModule <=< typecheckModule <=< parseModule <=< getModSummary $ mkModuleName modName
-    return $ mg_binds . coreModule $ ds
+    desugarModule <=< typecheckModule
+                  <=< parseModule
+                  <=< getModSummary $ mkModuleName modName
 
 data Args = Args
   { moduleName  :: String
@@ -288,8 +316,12 @@ argParse = Args
 runWithArgs :: Args -> IO ()
 runWithArgs (Args mn nt srd clr mybfname) = do
   let flg = Flags nt clr srd
-  c <- compileToCore mn
-  let output = intercalate "\n\n" (prBinding flg <$> c)
+  dsm <- getDesugaredModule mn
+  cbs <- getCoreBinds dsm
+  tcs <- getTyCons dsm
+  let tcsStr      = intercalate "\n\n" (prTyCon flg <$> tcs)
+  let bindingsStr = intercalate "\n\n" (prBinding flg <$> cbs)
+  let output      = tcsStr ++ "\n\n" ++ bindingsStr
   case mybfname of
     Just fname -> writeFile fname output
     Nothing    -> putStrLn output

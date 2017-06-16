@@ -21,9 +21,12 @@ module HASKELL-CORE-EXECUTION
                       | indirection(Loc)
                       | litObj(LitExpr)
 
+  syntax DataConVal ::= dc(Name)
+
   syntax KResult    ::= val(Loc) /* val should be used only
                                  with evaluated constants. */
                       | LitExpr
+                      | DataConVal
 
   syntax Expr       ::= KResult
 
@@ -40,13 +43,40 @@ module HASKELL-CORE-EXECUTION
   syntax Names      ::= List{Name, ";"} [klabel(nameList)]
   syntax Names      ::= getTmVars(VarList) [function]
 
-  syntax K ::= evalBind(SeqBind, Expr)                               [function]
-  rule evalBind(nonRec(tmVar(_, R), E1), E2:Expr)
-       => doBind(R, E1, E2)
-  rule evalBind(nonRec(tmVar(_, R), E1) BS:SeqBind, E2:Expr)
-       => doBind(R, E1, evalBind(BS, E2))
+  /* TODO: Consider the possibility of this being tagged as a function. */
+  syntax K ::= evalDecl(SeqDecl, Expr)
 
-  rule BS:SeqBind E:Expr => evalBind(BS, E)
+  rule evalDecl(nonRec(tmVar(_, R), E1), E2:Expr)
+       => doBind(R, E1, E2)
+  rule evalDecl(nonRec(tmVar(_, R), E1) DS:SeqDecl, E2:Expr)
+       => doBind(R, E1, evalDecl(DS, E2))
+  rule evalDecl(algTyCon(_, _, dataTyCon(DataConEmpty)), E:Expr)
+       => E
+  rule evalDecl(algTyCon(_, _, dataTyCon(DataConEmpty)) DS:SeqDecl, E:Expr)
+       => evalDecl(DS, E)
+  rule
+    <k>
+      evalDecl(algTyCon(TN, TAU, dataTyCon(DataConCons(dataCon(R, Ar), DCS))),
+               E:Expr)
+      => evalDecl(algTyCon(TN, TAU, dataTyCon(DCS)), E)
+      ...
+    </k>
+    <tenv>
+      M:Map => M[R <- Ar]
+    </tenv>
+  rule
+    <k>
+      evalDecl(algTyCon(TN, TAU, dataTyCon(DataConCons(dataCon(R, Ar), DCS)))
+               DS:SeqDecl,
+               E:Expr)
+      => evalDecl(algTyCon(TN, TAU, dataTyCon(DCS)) DS, E)
+      ...
+    </k>
+    <tenv>
+      M:Map => M[R <- Ar]
+    </tenv>
+
+  rule DS:SeqDecl E:Expr => evalDecl(DS, E)
 
   // Get Ids out of VarList
   rule getTmVars(VarEmpty)                   => .Names
@@ -57,10 +87,13 @@ module HASKELL-CORE-EXECUTION
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
   configuration
-    <k> $PGM:K </k>
-    <store> .Map </store> // Loc |-> Object
-    <env> .Map </env>     // Name |-> Loc
-    <exit-code exit=""> 0::Int </exit-code>
+    <T>
+      <k> $PGM:K </k>
+      <store> .Map </store> // Loc  |-> Object
+      <env> .Map </env>     // Name |-> Loc
+      <tenv> .Map </tenv>   // Name |-> Arity
+      <exit-code exit=""> 0::Int </exit-code>
+    </T>
 
   /*------------------------------------------------------------
   RULES FOR VAR
@@ -86,6 +119,9 @@ module HASKELL-CORE-EXECUTION
     <store> ... L |-> indirection(L') ... </store>
     <env> ... R |-> (L => L') ... </env>
   rule
+    <k> var(tmVar(_, R)) => dc(R) ... </k>
+    <tenv> ...  R |-> arity(0) ... </tenv>
+  rule
     <k> (. => force(E, Env, L)) ~> var(tmVar(_, R)) ... </k>
     <store> ... L |-> thunk(E, Env) ... </store>
     <env> ... R |-> L ... </env>
@@ -104,12 +140,8 @@ module HASKELL-CORE-EXECUTION
     <k>
       app(val(L), E2) => doBindMap(R, E2, Env, Body) ~> restoreEnv(EOld) ...
     </k>
-    <env>
-      EOld
-    </env>
-    <store>
-      ... L |-> closure(R, Body, Env) ...
-    </store>
+    <env> EOld </env>
+    <store> ... L |-> closure(R, Body, Env) ... </store>
   rule
     <k> app(val(L), _) => Body ~> restoreEnv(EOld) ... </k>
     <env> EOld => Env </env>

@@ -1,5 +1,0 @@
-let(nonRec(tmVar([type omitted], name(ds_d1hc)), lit(litInt(0, [type omitted]))),
-    case(app(app(app(app(var(tmVar([type omitted], name(==))), type([type omitted])),
-      var(tmVar([type omitted], name($fEqInteger)))), var(tmVar([type omitted], name(ds_d1hc)))),
-      lit(litInt(0, [type omitted]))), tmVar([type omitted], name(wild_00)), [type omitted], altCons(alt(dataAlt(dataCon(name(False))), VarEmpty, app(lam(tmVar([type omitted], name(ds_d1hg)), var(tmVar([type omitted], name(ds_d1hc)))), var(tmVar([type omitted], name(void#))))), altCons(alt(dataAlt(dataCon(name(True))), VarEmpty, app(app(app(var(tmVar([type omitted], name(negate))), type([type omitted])), var(tmVar([type omitted], name($fNumInteger)))), lit(litInt(1, [type omitted])))), altEmpty)))
-    )
