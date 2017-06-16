@@ -298,6 +298,14 @@ data Args = Args
   , colorful    :: Bool
   , outFile     :: Maybe String }
 
+isResult :: Flags -> CoreBind -> Bool
+isResult flg (NonRec b _) = prVar flg b == "tmVar([type omitted], name(result))"
+isResult _ _ = False
+
+getDefiniens :: Flags -> CoreBind -> String
+getDefiniens flg (NonRec _ e) = prExpr flg e
+getDefiniens _ _ = error "result is a recursive binding"
+
 argParse :: Parser Args
 argParse = Args
         <$> argument str (metavar "MODULE")
@@ -320,8 +328,15 @@ runWithArgs (Args mn nt srd clr mybfname) = do
   cbs <- getCoreBinds dsm
   tcs <- getTyCons dsm
   let tcsStr      = intercalate "\n\n" (prTyCon flg <$> tcs)
-  let bindingsStr = intercalate "\n\n" (prBinding flg <$> cbs)
-  let output      = tcsStr ++ "\n\n" ++ bindingsStr
+  let bindings = if srd then filter (not . isResult flg) cbs else cbs
+  let bindingsStr = intercalate "\n\n" (prBinding flg <$> bindings)
+  let output = if srd
+               then
+                 let result = case filter (isResult flg) cbs of
+                                [result'] -> getDefiniens flg result'
+                                _ -> undefined
+                 in tcsStr ++ "\n\n" ++ bindingsStr ++ "\n\n" ++ result
+               else tcsStr ++ "\n\n" ++ bindingsStr
   case mybfname of
     Just fname -> writeFile fname output
     Nothing    -> putStrLn output
