@@ -1,3 +1,5 @@
+module ChurchBool where
+
 foo :: Integer
 foo =
   let true  = (\x -> \y -> x)
