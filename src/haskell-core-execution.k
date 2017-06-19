@@ -138,9 +138,11 @@ module HASKELL-CORE-EXECUTION
   // Primitive equality
   syntax Expr ::= "keq" "(" Expr "," Expr ")"
 
+  syntax HsId ::= "True" | "False"
+
   // `keq` should be rewritten to a Haskell Bool.
-  rule keq(E1:Expr, E2:Expr) => dc(name(True:HsId)) when E1 ==K E2
-  rule keq(E1:Expr, E2:Expr) => dc(name(False:HsId)) when E1 =/=K E2
+  rule keq(E1:Expr, E2:Expr) => dc(name(True)) when E1 ==K E2
+  rule keq(E1:Expr, E2:Expr) => dc(name(False)) when E1 =/=K E2
 
   // App
   rule
