@@ -135,6 +135,13 @@ module HASKELL-CORE-EXECUTION
     <k> update(lit(M), L) => . ... </k>
     <store> ... L |-> (_ => litObj(lit(M))) ... </store>
 
+  // Primitive equality
+  syntax Expr ::= "keq" "(" Expr "," Expr ")"
+
+  // `keq` should be rewritten to a Haskell Bool.
+  rule keq(E1:Expr, E2:Expr) => dc(name(True:HsId)) when E1 ==K E2
+  rule keq(E1:Expr, E2:Expr) => dc(name(False:HsId)) when E1 =/=K E2
+
   // App
   rule
     <k>
