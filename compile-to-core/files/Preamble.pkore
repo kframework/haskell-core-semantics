@@ -2,7 +2,7 @@ algTyCon(name(Bool),
          [type omitted],
          dataTyCon(DataConCons(dataCon(name(True), arity(0)),
                    DataConCons(dataCon(name(False), arity(0)),
-                  DataConEmpty))))
+                   DataConEmpty))))
 
 nonRec(tmVar([type omitted], name(==)),
   lam(tyVar([type omitted], name(t)),
