@@ -153,8 +153,11 @@ module HASKELL-CORE-EXECUTION
   syntax HsId ::= "True" | "False"
 
   // `keq` should be rewritten to a Haskell Bool.
-  rule keq(E1:Expr, E2:Expr) => dc(name(True)) when E1 ==K E2
-  rule keq(E1:Expr, E2:Expr) => dc(name(False)) when E1 =/=K E2
+  rule keq(LE1:LitExpr, LE2:LitExpr) => dc(name(True))  when LE1 ==K LE2
+  rule keq(LE1:LitExpr, LE2:LitExpr) => dc(name(False)) when LE1 =/=K LE2
+  rule
+    <k> keq(val(L1), val(L2)) => keq(LE1, LE2) ... </k>
+    <store> ... L1 |-> litObj(LE1) L2 |-> litObj(LE2) ... </store>
 
   // App
   rule
@@ -268,6 +271,8 @@ module HASKELL-CORE-EXECUTION
   rule <k> restoreEnv(Env) => . ... </k>
        <env> _ => Env </env>
   rule <k> val(I) ~> restoreEnv(Env) => val(I) ... </k>
+       <env> _ => Env </env>
+  rule <k> dc(R) ~> restoreEnv(Env) => dc(R) ... </k>
        <env> _ => Env </env>
 
   rule <k> scope(K) => K ~> restoreEnv(Env) ... </k>
