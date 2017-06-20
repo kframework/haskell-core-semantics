@@ -305,5 +305,11 @@ module HASKELL-CORE-EXECUTION
     <k> val(L) => O </k>
     <store> Sto:Map (L |-> O) => .Map </store>
     <env> _ => .Map </env>
+  rule
+    <k> dc(R) </k>
+    <store> M:Map (_ |-> _) => .Map </store>
+  rule
+    <k> dc(R) </k>
+    <env> M:Map (_ |-> _) => .Map </env>
 
 endmodule
