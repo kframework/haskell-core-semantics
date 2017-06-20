@@ -1,3 +1,9 @@
+algTyCon(name(Bool),
+         [type omitted],
+         dataTyCon(DataConCons(dataCon(name(True), arity(0)),
+                   DataConCons(dataCon(name(False), arity(0)),
+                  DataConEmpty))))
+
 nonRec(tmVar([type omitted], name(==)),
   lam(tyVar([type omitted], name(t)),
     lam(tmVar([type omitted], name(f)),
@@ -7,4 +13,3 @@ nonRec(tmVar([type omitted], name(==)),
               var(tmVar([type omitted], name(y)))))))))
 
 nonRec(tmVar([type omitted], name($fEqInteger)), lit(machInt(-1)))
-
