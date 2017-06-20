@@ -86,6 +86,20 @@ module HASKELL-CORE-EXECUTION
   // NB: Some rules in core_spec.pdf are accounted for due to strictness of the
   // literal case, i.e. S_Case, S_Tick, S_App, etc.
 
+  /*(1 |-> closure(name(tau),
+                closure(name(f),
+                        closure(name(x),
+                                closure(name(y),
+                                        app(app(name(f),
+                                                name(x)),
+                                            name(y)),
+                                        .Map),
+                                .Map),
+                        .Map),
+                .Map)
+  2 |-> closure(name(x),
+                closure(name(y),
+                        keq(name(x), name(y)), .Map), .Map))*/
   configuration
     <T>
       <k> $PGM:K </k>
@@ -135,8 +149,6 @@ module HASKELL-CORE-EXECUTION
     <k> update(lit(M), L) => . ... </k>
     <store> ... L |-> (_ => litObj(lit(M))) ... </store>
 
-  // Primitive equality
-  syntax Expr ::= "keq" "(" Expr "," Expr ")"
 
   syntax HsId ::= "True" | "False"
 

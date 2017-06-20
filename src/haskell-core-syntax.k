@@ -76,6 +76,8 @@ module HASKELL-CORE-COMMON
                     | "tick" "(" Tickish "," Expr ")"
                     | "type" "(" Type ")"
                     | Coercion
+                  // Primitive equality
+                    | "keq" "(" Expr "," Expr ")"
 
   syntax LitExpr  ::= "lit"  "(" Lit ")"
 
