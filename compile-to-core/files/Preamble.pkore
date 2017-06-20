@@ -1,0 +1,10 @@
+nonRec(tmVar([type omitted], name(==)),
+  lam(tyVar([type omitted], name(t)),
+    lam(tmVar([type omitted], name(f)),
+      lam(tmVar([type omitted], name(x)),
+        lam(tmVar([type omitted], name(y)),
+          keq(var(tmVar([type omitted], name(x))),
+              var(tmVar([type omitted], name(y)))))))))
+
+nonRec(tmVar([type omitted], name($fEqInteger)), lit(machInt(-1)))
+
