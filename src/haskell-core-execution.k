@@ -149,12 +149,28 @@ module HASKELL-CORE-EXECUTION
     <k> update(lit(M), L) => . ... </k>
     <store> ... L |-> (_ => litObj(lit(M))) ... </store>
 
-
-  syntax HsId ::= "True" | "False"
-
   // `keq` should be rewritten to a Haskell Bool.
-  rule keq(LE1:LitExpr, LE2:LitExpr) => dc(name(True))  when LE1 ==K LE2
-  rule keq(LE1:LitExpr, LE2:LitExpr) => dc(name(False)) when LE1 =/=K LE2
+  rule
+    <k> keq(LE:LitExpr, LE:LitExpr) => val(!L) ... </k>
+    <store>
+      ...
+      .Map => !L |->
+        data(dataCon(name(#parseToken("HsId@HASKELL-CORE-COMMON", "True")),
+                     arity(0)),
+             .Locs)
+      ...
+    </store>
+  rule
+    <k> keq(LE1:LitExpr, LE2:LitExpr) => val(!L) ... </k>
+    <store>
+      ...
+      .Map => !L |->
+        data(dataCon(name(#parseToken("HsId@HASKELL-CORE-COMMON", "False")),
+                     arity(0)),
+             .Locs)
+      ...
+    </store>
+    when LE1 =/=K LE2
   rule
     <k> keq(val(L1), val(L2)) => keq(LE1, LE2) ... </k>
     <store> ... L1 |-> litObj(LE1) L2 |-> litObj(LE2) ... </store>
@@ -226,28 +242,19 @@ module HASKELL-CORE-EXECUTION
   // matching constructor
   rule
     <k>
-      case(val(V), tmVar(_, R), _, altCons(alt(dataAlt(C), Vars, E), _))
-        => scope(doBind(R, val(V), bindVals(getTmVars(Vars), Fields, E)))
+      case(val(V), tmVar(_, R), _, altCons(alt(dataAlt(C), VL, E), _))
+        => scope(doBind(R, val(V), bindVals(getTmVars(VL), Fields, E)))
       ...
     </k>
-    <store>
-      ...
-      V |-> data(C, Fields)
-      ...
-    </store>
-
+    <store> ... V |-> data(C, Fields) ... </store>
+  
   // different constructor
   rule
     <k>
-      case(val(V), R, _, (altCons(alt(dataAlt(C1), _, E), AltList)
-             => AltList))
+      case(val(V), _, _, (altCons(alt(dataAlt(C1), _, E:Expr), AL) => AL))
       ...
     </k>
-    <store>
-      ...
-      V |-> data(C2, _)
-      ...
-    </store>
+    <store> ... V |-> data(C2, _) ... </store>
     requires C1 =/=K C2
 
   // matching lit

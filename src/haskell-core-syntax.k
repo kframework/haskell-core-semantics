@@ -30,7 +30,10 @@ module HASKELL-CORE-COMMON
   syntax VarList  ::= "VarEmpty"
                     | "VarCons" "(" Var "," VarList ")"
 
-  syntax HsId
+  // For creating explicit HsIds in rules
+  syntax HsId ::= "#parseToken" "(" String "," String ")"
+                  [function, hook(STRING.string2token)]
+                  
   syntax Name     ::= "name" "(" HsId ")"
 
   syntax Arity    ::= "arity" "(" Int ")"
