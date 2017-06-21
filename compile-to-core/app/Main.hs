@@ -19,6 +19,7 @@ import           HscTypes              (mg_binds, mg_tcs)
 import           Literal
 import           Options.Applicative
 import qualified Outputable            as OP
+import           System.Environment    (getEnv)
 import           TyCon                 (AlgTyConRhs (..), algTyConRhs,
                                         isAlgTyCon, isPromotedDataCon,
                                         isPromotedDataCon_maybe, isTupleTyCon,
@@ -304,7 +305,7 @@ isResult _ _ = False
 
 getDefiniens :: Flags -> CoreBind -> String
 getDefiniens flg (NonRec _ e) = prExpr flg e
-getDefiniens _ _ = error "result is a recursive binding"
+getDefiniens _ _              = error "result is a recursive binding"
 
 argParse :: Parser Args
 argParse = Args
@@ -327,6 +328,8 @@ runWithArgs (Args mn nt srd clr mybfname) = do
   dsm <- getDesugaredModule mn
   cbs <- getCoreBinds dsm
   tcs <- getTyCons dsm
+  hcsDir <- getEnv "HASKELL_CORE_SEMANTICS_DIR"
+  preamble <- readFile $ hcsDir ++ "/compile-to-core/files/Preamble.pkore"
   let tcsStr      = intercalate "\n\n" (prTyCon flg <$> tcs)
   let bindings = if srd then filter (not . isResult flg) cbs else cbs
   let bindingsStr = intercalate "\n\n" (prBinding flg <$> bindings)
@@ -334,12 +337,13 @@ runWithArgs (Args mn nt srd clr mybfname) = do
                then
                  let result = case filter (isResult flg) cbs of
                                 [result'] -> getDefiniens flg result'
-                                _ -> undefined
+                                _         -> undefined
                  in tcsStr ++ "\n\n" ++ bindingsStr ++ "\n\n" ++ result
                else tcsStr ++ "\n\n" ++ bindingsStr
+  let output' = preamble ++ "// END OF PREAMBLE" ++ output
   case mybfname of
-    Just fname -> writeFile fname output
-    Nothing    -> putStrLn output
+    Just fname -> writeFile fname output'
+    Nothing    -> putStrLn output'
 
 main :: IO ()
 main = do
